@@ -4,6 +4,14 @@ const rubico = require('rubico')
 
 const { pipe } = rubico
 
+const add = (a, b) => a + b
+
+ThunkTest('adds two values', add)
+  .case(5, 5, 10) // assert.strictEqual(add(5, 5), 10)
+  .case('abcde', 'fg', result => { // supply your own callback
+    assert.strictEqual(result, 'abcdefg')
+  })()
+
 ThunkTest(
   'pipe: awesome username generator',
   pipe([

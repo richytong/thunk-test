@@ -57,6 +57,18 @@ const curry2 = function (baseFunc, arg0, arg1) {
 const promiseAll = Promise.all.bind(Promise)
 
 /**
+ * @name log
+ *
+ * @synopsis
+ * ```coffeescript [specscript]
+ * log(args ...any) -> ()
+ * ```
+ */
+const log = function (...args) {
+  console.log(...args)
+}
+
+/**
  * @name AssertionError
  *
  * @synopsis
@@ -84,8 +96,8 @@ const AssertionError = function (message) {
  */
 const assertStrictEqual = function (expected, actual) {
   if (expected !== actual) {
-    console.log('expected', expected)
-    console.log('actual', actual)
+    log('expected', expected)
+    log('actual', actual)
     throw AssertionError('not strict equal')
   }
 }
@@ -102,14 +114,14 @@ const assertStrictEqual = function (expected, actual) {
  */
 const errorAssertEqual = function (expected, actual) {
   if (actual.name != expected.name) {
-    console.log()
-    console.log('-- expect:', expected.name)
-    console.log('-- actual:', actual.name)
+    log()
+    log('-- expect:', expected.name)
+    log('-- actual:', actual.name)
     throw AssertionError('error names are different')
   } else if (actual.message != expected.message) {
-    console.log()
-    console.log('-- expect:', expected.message)
-    console.log('-- actual:', actual.message)
+    log()
+    log('-- expect:', expected.message)
+    log('-- actual:', actual.message)
     throw AssertionError('error messages are different')
   }
 }
@@ -167,10 +179,10 @@ const assertThrowsCallback = function (func, args, callback) {
     const execution = callback(error, ...args)
     if (isPromise(execution)) {
       return execution.then(funcConcat(
-      tapSync(thunkify1(console.log, ` ✓ ${argsInspect(args)} throws ...`)),
+      tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} throws ...`)),
         noop))
     }
-    console.log(` ✓ ${argsInspect(args)} throws ...`)
+    log(` ✓ ${argsInspect(args)} throws ...`)
     return undefined
   }
   throw AssertionError('did not throw')
@@ -196,7 +208,7 @@ const argsInspect = args => args.length == 1
  * funcInspect(args Array) -> funcRepresentation string
  * ```
  */
-const funcInspect = func => `${func.name || 'callback'}()`
+const funcInspect = func => `${func.name || 'callback'}(${func.length == 0 ? '' : '...'})`
 
 /**
  * @name ThunkTest
@@ -222,7 +234,7 @@ const funcInspect = func => `${func.name || 'callback'}()`
 const ThunkTest = function (name, func) {
   const operations = []
   return objectAssign(function thunkTest() {
-    console.log(name)
+    log(name)
     const operationsLength = operations.length,
       promises = []
     let operationsIndex = -1
@@ -241,13 +253,13 @@ const ThunkTest = function (name, func) {
         operations.push([
           thunkifyArgs(func, args),
           expected,
-          tapSync(thunkify1(console.log, ` ✓ ${argsInspect(args)} -> ${funcInspect(expected)}`)),
+          tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} -> ${funcInspect(expected)}`)),
         ].reduce(funcConcat))
       } else {
         operations.push([
           thunkifyArgs(func, args),
           curry2(assertStrictEqual, expected, __),
-          tapSync(thunkify1(console.log, ` ✓ ${argsInspect(args)} -> ${expected}`)),
+          tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} -> ${expected}`)),
         ].reduce(funcConcat))
       }
       return this
@@ -266,10 +278,10 @@ const ThunkTest = function (name, func) {
             const execution = expected(error, ...args)
             if (isPromise(execution)) {
               return execution.then(funcConcat(
-                tapSync(thunkify1(console.log, ` ✓ ${argsInspect(args)} throws ...`)),
+                tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} throws ...`)),
                 noop))
             }
-            console.log(` ✓ ${argsInspect(args)} throws ...`)
+            log(` ✓ ${argsInspect(args)} throws ...`)
             return undefined
           }
           throw AssertionError('did not throw')
@@ -277,7 +289,7 @@ const ThunkTest = function (name, func) {
       } else {
         operations.push(funcConcat(
           thunkify2(assertThrows, thunkifyArgs(func, args), expected),
-          tapSync(thunkify1(console.log, ` ✓ ${argsInspect(args)} throws ${expected}`)),
+          tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} throws ${expected}`)),
         ))
       }
       return this
