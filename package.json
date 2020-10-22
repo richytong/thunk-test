@@ -1,0 +1,39 @@
+{
+  "name": "thunk-test",
+  "version": "0.0.0",
+  "description": "Modular testing for JavaScript",
+  "author": "Richard Tong",
+  "license": "MIT",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "github:richytong/thunk-test"
+  },
+  "homepage": "https://github.com/richytong/thunk-test",
+  "keywords": [
+    "thunk",
+    "test",
+    "thunkify",
+    "testing",
+    "es6",
+    "esm",
+    "async",
+    "asynchronous",
+    "promise",
+    "concurrent",
+    "parallel",
+    "series",
+    "function-composition",
+    "functional-programming",
+    "node",
+    "javascript",
+    "iterator",
+    "combinators"
+  ],
+  "devDependencies": {
+    "rubico": "latest"
+  },
+  "scripts": {
+    "test": "node test.js"
+  }
+}
