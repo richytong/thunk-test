@@ -1,4 +1,4 @@
-# thunk-test
+# ThunkTest
 Modular testing for JavaScript
 
 ```javascript
