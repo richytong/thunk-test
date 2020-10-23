@@ -2,6 +2,8 @@ const noop = function () {}
 
 const always = value => function getter() { return value }
 
+const isArray = Array.isArray
+
 const objectAssign = Object.assign
 
 const isPromise = value => value != null && typeof value.then == 'function'
@@ -34,6 +36,10 @@ const thunkify2 = (func, arg0, arg1) => function thunk() {
 
 const __ = Symbol.for('placeholder')
 
+const curry1 = (func, arg0) => arg0 == __
+  ? _arg0 => curry1(func, _arg0)
+  : func(arg0)
+
 // argument resolver for curry2
 const curry2ResolveArg0 = (
   baseFunc, arg1,
@@ -55,6 +61,65 @@ const curry2 = function (baseFunc, arg0, arg1) {
 }
 
 const promiseAll = Promise.all.bind(Promise)
+
+const inspect = function (value, depth = 1) {
+  const inspectDeeper = item => inspect(item, depth + 1)
+  if (Array.isArray(value)) {
+    return `[${value.map(inspectDeeper).join(', ')}]`
+  }
+  if (ArrayBuffer.isView(value)) {
+    return `${value.constructor.name} [${value.join(', ')}]`
+  }
+  if (typeof value == 'string') {
+    return depth == 0 ? value : `'${value}'`
+  }
+  if (value == null) {
+    return `${value}`
+  }
+  if (value.constructor == Set) {
+    if (value.size == 0) {
+      return 'Set {}'
+    }
+    let result = `Set { `
+    const resultValues = []
+    for (const item of value) {
+      resultValues.push(inspectDeeper(item))
+    }
+    result += resultValues.join(', ')
+    result += ' }'
+    return result
+  }
+  if (value.constructor == Map) {
+    if (value.size == 0) {
+      return 'Map {}'
+    }
+    let result = 'Map { '
+    const entries = []
+    for (const [key, item] of value) {
+      entries.push(`${inspectDeeper(key)} => ${inspectDeeper(item)}`)
+    }
+    result += entries.join(', ')
+    result += ' }'
+    return result
+  }
+  if (value.constructor == Object) {
+    if (Object.keys(value).length == 0) {
+      return '{}'
+    }
+    let result = '{ '
+    const entries = []
+    for (const key in value) {
+      entries.push(`${key}: ${inspectDeeper(value[key])}`)
+    }
+    result += entries.join(', ')
+    result += ' }'
+    return result
+  }
+  if (value instanceof Error) {
+    return `${value.name}: ${value.message}`
+  }
+  return `${value}`
+}
 
 /**
  * @name log
@@ -86,21 +151,169 @@ const AssertionError = function (message) {
   return error
 }
 
+const objectKeysLength = object => {
+  let numKeys = 0
+  for (const _ in object) {
+    numKeys += 1
+  }
+  return numKeys
+}
+
+const symbolIterator = Symbol.iterator
+
 /**
- * @name assertStrictEqual
+ * @name areIteratorsDeepEqual
+ *
+ * @synopsis
+ * areIteratorsDeepEqual(left Iterator, right Iterator) -> boolean
+ */
+const areIteratorsDeepEqual = function (leftIterator, rightIterator) {
+  let leftIteration = leftIterator.next(),
+    rightIteration = rightIterator.next()
+  if (leftIteration.done != rightIteration.done) {
+    return false
+  }
+  while (!leftIteration.done) {
+    if (!isDeepEqual(leftIteration.value, rightIteration.value)) {
+      return false
+    }
+    leftIteration = leftIterator.next()
+    rightIteration = rightIterator.next()
+  }
+  return rightIteration.done
+}
+
+/**
+ * @name areObjectsDeepEqual
+ *
+ * @synopsis
+ * areObjectsDeepEqual(left Object, right Object) -> boolean
+ */
+const areObjectsDeepEqual = function (leftObject, rightObject) {
+  const leftKeysLength = objectKeysLength(leftObject),
+    rightKeysLength = objectKeysLength(rightObject)
+  if (leftKeysLength != rightKeysLength) {
+    return false
+  }
+  for (const key in leftObject) {
+    if (!isDeepEqual(leftObject[key], rightObject[key])) {
+      return false
+    }
+  }
+  return true
+}
+
+/**
+ * @name areArraysDeepEqual
+ *
+ * @synopsis
+ * areArraysDeepEqual(left Array, right Array) -> boolean
+ */
+const areArraysDeepEqual = function (leftArray, rightArray) {
+  const length = leftArray.length
+  if (rightArray.length != length) {
+    return false
+  }
+  let index = -1
+  while (++index < length) {
+    if (!isDeepEqual(leftArray[index], rightArray[index])) {
+      return false
+    }
+  }
+  return true
+}
+
+/**
+ * @name isDeepEqual
  *
  * @synopsis
  * ```coffeescript [specscript]
- * assertStrictEqual(expected any, actual any) -> boolean
+ * Nested<T> = Array<Array<T>|Object<T>|Iterable<T>|T>|Object<Array<T>|Object<T>|Iterable<T>|T>
+ *
+ * var left Nested,
+ *   right Nested
+ *
+ * isDeepEqual(left, right) -> boolean
+ * ```
+ *
+ * @description
+ * Check two values for deep strict equality.
+ *
+ * ```javascript [node]
+ * console.log(
+ *   isDeepEqual({ a: 1, b: 2, c: [3] }, { a: 1, b: 2, c: [3] }),
+ * ) // true
+ *
+ * console.log(
+ *   isDeepEqual({ a: 1, b: 2, c: [3] }, { a: 1, b: 2, c: [5] }),
+ * ) // false
  * ```
  */
-const assertStrictEqual = function (expected, actual) {
-  if (expected !== actual) {
+const isDeepEqual = function (leftItem, rightItem) {
+  if (isArray(leftItem) && isArray(rightItem)) {
+    return areArraysDeepEqual(leftItem, rightItem)
+  } else if (
+    typeof leftItem == 'object' && typeof rightItem == 'object'
+      && leftItem.constructor == rightItem.constructor
+      && typeof leftItem[symbolIterator] == 'function'
+      && typeof rightItem[symbolIterator] == 'function'
+  ) {
+    return areIteratorsDeepEqual(
+      leftItem[symbolIterator](), rightItem[symbolIterator]())
+  } else if (leftItem == null || rightItem == null) {
+    return leftItem === rightItem
+  } else if (
+    leftItem.constructor == Object && rightItem.constructor == Object
+  ) {
+    return areObjectsDeepEqual(leftItem, rightItem)
+  }
+  return leftItem === rightItem
+}
+
+/**
+ * @name assertEqual
+ *
+ * @synopsis
+ * ```coffeescript [specscript]
+ * assertEqual(expected any, actual any) -> boolean
+ * ```
+ */
+const assertEqual = function (expected, actual) {
+  if (typeof expected == 'object' && typeof actual == 'object') {
+    if (!isDeepEqual(expected, actual)) {
+      log('expected', expected)
+      log('actual', actual)
+      throw AssertionError('not deep equal')
+    }
+  } else if (expected !== actual) {
     log('expected', expected)
     log('actual', actual)
     throw AssertionError('not strict equal')
   }
+  return undefined
 }
+
+/**
+ * @name argsInspect
+ *
+ * @synopsis
+ * ```coffeescript [specscript]
+ * argsInspect(args Array) -> argsRepresentation string
+ * ```
+ */
+const argsInspect = args => args.length == 1
+  ? `${inspect(args[0])}`
+  : `(${args.map(curry1(inspect, __)).join(', ')})`
+
+/**
+ * @name funcInspect
+ *
+ * @synopsis
+ * ```coffeescript [specscript]
+ * funcInspect(args Array) -> funcRepresentation string
+ * ```
+ */
+const funcInspect = func => `${func.name || 'callback'}(${func.length == 0 ? '' : '...'})`
 
 /**
  * @name errorAssertEqual
@@ -189,28 +402,6 @@ const assertThrowsCallback = function (func, args, callback) {
 }
 
 /**
- * @name argsInspect
- *
- * @synopsis
- * ```coffeescript [specscript]
- * argsInspect(args Array) -> argsRepresentation string
- * ```
- */
-const argsInspect = args => args.length == 1
-  ? `${args[0]}`
-  : `(${args.join(', ')})`
-
-/**
- * @name funcInspect
- *
- * @synopsis
- * ```coffeescript [specscript]
- * funcInspect(args Array) -> funcRepresentation string
- * ```
- */
-const funcInspect = func => `${func.name || 'callback'}(${func.length == 0 ? '' : '...'})`
-
-/**
  * @name ThunkTest
  *
  * @synopsis
@@ -258,8 +449,8 @@ const ThunkTest = function (name, func) {
       } else {
         operations.push([
           thunkifyArgs(func, args),
-          curry2(assertStrictEqual, expected, __),
-          tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} -> ${expected}`)),
+          curry2(assertEqual, expected, __),
+          tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} -> ${inspect(expected)}`)),
         ].reduce(funcConcat))
       }
       return this
