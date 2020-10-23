@@ -433,7 +433,7 @@ const assertThrowsCallback = function (func, args, callback) {
 const ThunkTest = function (name, func) {
   const operations = []
   return objectAssign(function thunkTest() {
-    log(name)
+    log('--', name)
     const operationsLength = operations.length,
       promises = []
     let operationsIndex = -1

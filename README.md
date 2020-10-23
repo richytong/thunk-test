@@ -20,7 +20,7 @@ ThunkTest(
     assert.strictEqual(err.name, 'TypeError')
     assert.strictEqual(err.message, 'Cannot read property \'toUpperCase\' of null')
   })()
-// pipe: awesome username generator
+// -- pipe: awesome username generator
 //  ✓ pipeline('deimos') -> '_xXxDEIMOSxXx_'
 //  ✓ pipeline('|') -> result => assert.equal(result, '_xXx|xXx_')
 //  ✓ pipeline(1) throws TypeError: string.toUpperCase is not a function
