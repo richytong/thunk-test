@@ -13,5 +13,5 @@ const thunkTestForAdd = ThunkTest('adds two values', add)
 thunkTestForAdd()
 // adds two values
 //  ✓ (5, 5) -> 10
-//  ✓ (abcde, fg) -> callback(...)
+//  ✓ ('abcde', 'fg') -> callback(...)
 ```
