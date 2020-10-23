@@ -324,6 +324,18 @@ const funcInspect = func => func.toString()
 const funcSignature = (func, args) => `${func.name || 'anonymous'}(${argsInspect(args)})`
 
 /**
+ * @name errorInspect
+ *
+ * @synopsis
+ * ```coffeescript [specscript]
+ * Error = { name: string, message: string }
+ *
+ * errorInspect(error Error) -> funcRepresentation string
+ * ```
+ */
+const errorInspect = error => `${error.name}('${error.message}')`
+
+/**
  * @name errorAssertEqual
  *
  * @synopsis
@@ -452,7 +464,7 @@ const ThunkTest = function (name, func) {
         operations.push([
           thunkifyArgs(func, args),
           expected,
-          tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} -> ${funcInspect(expected)}`)),
+          tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} |> ${funcInspect(expected)}`)),
         ].reduce(funcConcat))
       } else {
         operations.push([
@@ -488,7 +500,7 @@ const ThunkTest = function (name, func) {
       } else {
         operations.push(funcConcat(
           thunkify2(assertThrows, thunkifyArgs(func, args), expected),
-          tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws ${expected}`)),
+          tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws ${errorInspect(expected)}`)),
         ))
       }
       return this

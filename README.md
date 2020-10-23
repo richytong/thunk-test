@@ -37,6 +37,16 @@ ThunkTest(
 //     }
 ```
 
+`ThunkTest` is a function-first testing library.
+
+### Syntax
+```coffeescript
+ThunkTest(story string, func function) -> thunkTest ()=>() {
+  case: (...args, expectedResult)=>this,
+  throws: (...args, expectedError)=>this,
+}
+```
+
 # Installation
 with `npm`
 ```bash
