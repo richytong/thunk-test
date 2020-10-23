@@ -301,9 +301,7 @@ const assertEqual = function (expected, actual) {
  * argsInspect(args Array) -> argsRepresentation string
  * ```
  */
-const argsInspect = args => args.length == 1
-  ? `${inspect(args[0])}`
-  : `(${args.map(curry1(inspect, __)).join(', ')})`
+const argsInspect = args => `${args.map(curry1(inspect, __)).join(', ')}`
 
 /**
  * @name funcInspect
@@ -313,7 +311,17 @@ const argsInspect = args => args.length == 1
  * funcInspect(args Array) -> funcRepresentation string
  * ```
  */
-const funcInspect = func => `${func.name || 'callback'}(${func.length == 0 ? '' : '...'})`
+const funcInspect = func => func.toString()
+
+/**
+ * @name funcSignature
+ *
+ * @synopsis
+ * ```coffeescript [specscript]
+ * funcSignature(func function, args Array) -> funcRepresentation string
+ * ```
+ */
+const funcSignature = (func, args) => `${func.name || 'anonymous'}(${argsInspect(args)})`
 
 /**
  * @name errorAssertEqual
@@ -444,13 +452,13 @@ const ThunkTest = function (name, func) {
         operations.push([
           thunkifyArgs(func, args),
           expected,
-          tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} -> ${funcInspect(expected)}`)),
+          tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} -> ${funcInspect(expected)}`)),
         ].reduce(funcConcat))
       } else {
         operations.push([
           thunkifyArgs(func, args),
           curry2(assertEqual, expected, __),
-          tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} -> ${inspect(expected)}`)),
+          tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} -> ${inspect(expected)}`)),
         ].reduce(funcConcat))
       }
       return this
@@ -469,10 +477,10 @@ const ThunkTest = function (name, func) {
             const execution = expected(error, ...args)
             if (isPromise(execution)) {
               return execution.then(funcConcat(
-                tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} throws ...`)),
+                tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws; ${funcInspect(expected)}`)),
                 noop))
             }
-            log(` ✓ ${argsInspect(args)} throws ...`)
+            log(` ✓ ${funcSignature(func, args)} throws; ${funcInspect(expected)}`)
             return undefined
           }
           throw AssertionError('did not throw')
