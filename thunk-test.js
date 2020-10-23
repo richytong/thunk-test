@@ -400,10 +400,10 @@ const assertThrowsCallback = function (func, args, callback) {
     const execution = callback(error, ...args)
     if (isPromise(execution)) {
       return execution.then(funcConcat(
-      tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} throws ...`)),
+      tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws ${funcInspect(callback)}`)),
         noop))
     }
-    log(` ✓ ${argsInspect(args)} throws ...`)
+    log(` ✓ ${funcSignature(func, args)} throws ${funcInspect(callback)}`)
     return undefined
   }
   throw AssertionError('did not throw')
@@ -488,7 +488,7 @@ const ThunkTest = function (name, func) {
       } else {
         operations.push(funcConcat(
           thunkify2(assertThrows, thunkifyArgs(func, args), expected),
-          tapSync(thunkify1(log, ` ✓ ${argsInspect(args)} throws ${expected}`)),
+          tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws ${expected}`)),
         ))
       }
       return this

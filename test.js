@@ -16,16 +16,15 @@ const tests = [
   ThunkTest(
     'pipe: awesome username generator',
     pipe([
-      (arg0, arg1) => arg1 == null ? arg0 : arg0 + arg1,
       string => string.toUpperCase(),
       string => `x${string}x`,
       string => `X${string}X`,
       string => `x${string}x`,
+      string => `_${string}_`,
     ]))
-    .case('deimos', 'xXxDEIMOSxXx') // result default deepEqual; last argument is expected result
-    .case('aa', 'bb', 'xXxAABBxXx') // multiple arguments
-    .case('|', result => assert.equal(result, 'xXx|xXx')) // can supply a callback
-    .case('?', async result => assert.equal(result, 'xXx?xXx')) // async ok
+    .case('deimos', '_xXxDEIMOSxXx_') // objects deep equal, otherwise strict equal
+    .case('|', result => assert.equal(result, '_xXx|xXx_')) // can supply a callback
+    .case('?', async result => assert.equal(result, '_xXx?xXx_')) // async ok
     .throws(1, new TypeError('string.toUpperCase is not a function'))
     .throws(null, (err, arg0) => {
       assert.strictEqual(arg0, null)
