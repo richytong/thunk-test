@@ -38,10 +38,14 @@ const tests = [
     }),
 
   ThunkTest(
-    'assign: parallel async',
+    'assign',
     assign({
       squared: ({ number }) => number ** 2,
       asyncCubed: async ({ number }) => number ** 3,
+    }),
+    assign({
+      squared: ({ number }) => number ** 2,
+      asyncCubed: ({ number }) => number ** 3,
     }))
     .case({ number: 0 }, { number: 0, squared: 0, asyncCubed: 0 })
     .case({ number: 1 }, { number: 1, squared: 1, asyncCubed: 1 })

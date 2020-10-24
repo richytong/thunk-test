@@ -254,6 +254,7 @@ const isDeepEqual = function (leftItem, rightItem) {
     return areArraysDeepEqual(leftItem, rightItem)
   } else if (
     typeof leftItem == 'object' && typeof rightItem == 'object'
+      && leftItem != null && rightItem != null
       && leftItem.constructor == rightItem.constructor
       && typeof leftItem[symbolIterator] == 'function'
       && typeof rightItem[symbolIterator] == 'function'
@@ -442,7 +443,7 @@ const assertThrowsCallback = function (func, args, callback) {
  * Modular testing for JavaScript.
  */
 
-const ThunkTest = function (name, func) {
+const ThunkTest = function (name, ...funcs) {
   const operations = []
   return objectAssign(function thunkTest() {
     log('--', name)
@@ -461,17 +462,21 @@ const ThunkTest = function (name, func) {
     case(...args) {
       const expected = args.pop()
       if (typeof expected == 'function') {
-        operations.push([
-          thunkifyArgs(func, args),
-          expected,
-          tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} |> ${funcInspect(expected)}`)),
-        ].reduce(funcConcat))
+        for (const func of funcs) {
+          operations.push([
+            thunkifyArgs(func, args),
+            expected,
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} |> ${funcInspect(expected)}`)),
+          ].reduce(funcConcat))
+        }
       } else {
-        operations.push([
-          thunkifyArgs(func, args),
-          curry2(assertEqual, expected, __),
-          tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} -> ${inspect(expected)}`)),
-        ].reduce(funcConcat))
+        for (const func of funcs) {
+          operations.push([
+            thunkifyArgs(func, args),
+            curry2(assertEqual, expected, __),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} -> ${inspect(expected)}`)),
+          ].reduce(funcConcat))
+        }
       }
       return this
     },
@@ -479,29 +484,33 @@ const ThunkTest = function (name, func) {
     throws(...args) {
       const expected = args.pop()
       if (typeof expected == 'function') {
-        operations.push(function tryCatching() {
-          try {
-            const execution = func(...args)
-            if (isPromise(execution)) {
-              return execution.then(thunkify1(throwAssertionError, 'did not throw'))
+        for (const func of funcs) {
+          operations.push(function tryCatching() {
+            try {
+              const execution = func(...args)
+              if (isPromise(execution)) {
+                return execution.then(thunkify1(throwAssertionError, 'did not throw'))
+              }
+            } catch (error) {
+              const execution = expected(error, ...args)
+              if (isPromise(execution)) {
+                return execution.then(funcConcat(
+                  tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws; ${funcInspect(expected)}`)),
+                  noop))
+              }
+              log(` ✓ ${funcSignature(func, args)} throws; ${funcInspect(expected)}`)
+              return undefined
             }
-          } catch (error) {
-            const execution = expected(error, ...args)
-            if (isPromise(execution)) {
-              return execution.then(funcConcat(
-                tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws; ${funcInspect(expected)}`)),
-                noop))
-            }
-            log(` ✓ ${funcSignature(func, args)} throws; ${funcInspect(expected)}`)
-            return undefined
-          }
-          throw AssertionError('did not throw')
-        })
+            throw AssertionError('did not throw')
+          })
+        }
       } else {
-        operations.push(funcConcat(
-          thunkify2(assertThrows, thunkifyArgs(func, args), expected),
-          tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws ${errorInspect(expected)}`)),
-        ))
+        for (const func of funcs) {
+          operations.push(funcConcat(
+            thunkify2(assertThrows, thunkifyArgs(func, args), expected),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws ${errorInspect(expected)}`)),
+          ))
+        }
       }
       return this
     },
