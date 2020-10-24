@@ -2,6 +2,28 @@
 Modular testing for JavaScript. Set up tests as thunks, then execute them with a call.
 
 ```javascript
+const assert = require('assert')
+const identity = require('./identity')
+const ThunkTest = require('thunk-test')
+
+describe('identity', () => {
+  it('returns whatever was passed to it', ThunkTest('identity', identity)
+    .case(1, 1)
+    .case('hey', 'hey')
+    .case(NaN, result => assert(isNaN(result)))
+  )
+})
+//   identity
+// -- identity
+//  ✓ identity(1) -> 1
+//  ✓ identity('hey') -> 'hey'
+//  ✓ identity(NaN) |> result => assert(isNaN(result))
+//     ✓ returns whatever was passed to it
+```
+
+ThunkTests are composed of a string descriptor, a function to test, and test cases denoted by `.case` and `.throws`.
+
+```javascript
 ThunkTest(
   'pipe: awesome username generator',
   pipe([
@@ -36,8 +58,6 @@ ThunkTest(
 //       assert.strictEqual(err.message, 'string.toUpperCase is not a function')
 //     }
 ```
-
-`ThunkTest` is a function-first testing library.
 
 ### Syntax
 ```coffeescript
