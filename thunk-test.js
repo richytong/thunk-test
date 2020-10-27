@@ -10,6 +10,8 @@ const isPromise = value => value != null && typeof value.then == 'function'
 
 const callPropUnary = (value, property, arg0) => value[property](arg0)
 
+const callPropBinary = (value, property, arg0, arg1) => value[property](arg0, arg1)
+
 const tapSync = func => function tapping(...args) {
   func(...args)
   return args[0]
@@ -40,6 +42,11 @@ const thunkify3 = (func, arg0, arg1, arg2) => function thunk() {
   return func(arg0, arg1, arg2)
 }
 
+const thunkify4 = (func, arg0, arg1, arg2, arg3) => function thunk() {
+  return func(arg0, arg1, arg2, arg3)
+}
+
+
 const __ = Symbol.for('placeholder')
 
 const curry1 = (func, arg0) => arg0 == __
@@ -64,6 +71,47 @@ const curry2 = function (baseFunc, arg0, arg1) {
   return arg0 == __
     ? curry2ResolveArg0(baseFunc, arg1)
     : curry2ResolveArg1(baseFunc, arg0)
+}
+
+// argument resolver for curry4
+const curry4ResolveArg0 = (
+  baseFunc, arg1, arg2, arg3,
+) => function arg0Resolver(arg0) {
+  return baseFunc(arg0, arg1, arg2, arg3)
+}
+
+// argument resolver for curry4
+const curry4ResolveArg1 = (
+  baseFunc, arg0, arg2, arg3,
+) => function arg1Resolver(arg1) {
+  return baseFunc(arg0, arg1, arg2, arg3)
+}
+
+// argument resolver for curry4
+const curry4ResolveArg2 = (
+  baseFunc, arg0, arg1, arg3,
+) => function arg2Resolver(arg2) {
+  return baseFunc(arg0, arg1, arg2, arg3)
+}
+
+// argument resolver for curry4
+const curry4ResolveArg3 = (
+  baseFunc, arg0, arg1, arg2,
+) => function arg3Resolver(arg3) {
+  return baseFunc(arg0, arg1, arg2, arg3)
+}
+
+const curry4 = function (baseFunc, arg0, arg1, arg2, arg3) {
+  if (arg0 == __) {
+    return curry4ResolveArg0(baseFunc, arg1, arg2, arg3)
+  }
+  if (arg1 == __) {
+    return curry4ResolveArg1(baseFunc, arg0, arg2, arg3)
+  }
+  if (arg2 == __) {
+    return curry4ResolveArg2(baseFunc, arg0, arg1, arg3)
+  }
+  return curry4ResolveArg3(baseFunc, arg0, arg1, arg2)
 }
 
 const promiseAll = Promise.all.bind(Promise)
@@ -493,6 +541,7 @@ const thunkTestExec = function (operations) {
  * @description
  * Modular testing for JavaScript.
  */
+
 const ThunkTest = function (name, ...funcs) {
   const operations = [],
     preprocessing = [],
@@ -507,6 +556,7 @@ const ThunkTest = function (name, ...funcs) {
         thunkify1(thunkTestExec, postprocessing),
       ))
     }
+
     cursor = thunkTestExec(operations)
     if (isPromise(cursor)) {
       return cursor.then(thunkify1(thunkTestExec, postprocessing))
@@ -515,25 +565,6 @@ const ThunkTest = function (name, ...funcs) {
     if (isPromise(cursor)) {
       return cursor.then(noop)
     }
-
-      /*
-    log('--', name)
-    const operationsLength = operations.length,
-      preprocessingLength = preprocessing.length,
-      postprocessingLength = postprocessing.length
-      promises = []
-    let operationsIndex = -1,
-      preprocessingIndex = -1,
-      postProcessingIndex = -1
-    while (++preprocessingIndex < )
-    while (++operationsIndex < operationsLength) {
-      const execution = operations[operationsIndex]()
-      if (isPromise(execution)) {
-        promises.push(execution)
-      }
-    }
-    return promises.length == 0 ? this : promiseAll(promises).then(always(this))
-    */
   }, {
 
     before(callback) {
@@ -557,15 +588,15 @@ const ThunkTest = function (name, ...funcs) {
       if (typeof expected == 'function') {
         for (const func of funcs) {
           operations.push([
-            thunkifyArgs(func, args),
-            expected,
+            thunkify4(callPropBinary, func, 'apply', this, args),
+            curry4(callPropBinary, expected, 'call', this, __),
             tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} |> ${funcInspect(expected)}`)),
           ].reduce(funcConcat))
         }
       } else {
         for (const func of funcs) {
           operations.push([
-            thunkifyArgs(func, args),
+            thunkify4(callPropBinary, func, 'apply', this, args),
             curry2(assertEqual, expected, __),
             tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} -> ${inspect(expected)}`)),
           ].reduce(funcConcat))
@@ -584,6 +615,7 @@ const ThunkTest = function (name, ...funcs) {
               if (isPromise(execution)) {
                 return execution.then(thunkify1(throwAssertionError, 'did not throw'))
               }
+
             } catch (error) {
               const execution = expected(error, ...args)
               if (isPromise(execution)) {
@@ -597,10 +629,14 @@ const ThunkTest = function (name, ...funcs) {
             throw AssertionError('did not throw')
           })
         }
+
       } else {
         for (const func of funcs) {
           operations.push(funcConcat(
-            thunkify2(assertThrows, thunkifyArgs(func, args), expected),
+            thunkify2(
+              assertThrows,
+              thunkify4(callPropBinary, func, 'apply', this, args),
+              expected),
             tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws ${errorInspect(expected)}`)),
           ))
         }

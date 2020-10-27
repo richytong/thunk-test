@@ -21,9 +21,14 @@ const tests = [
       console.log('I should be second at the beginning')
     })
     .case(5, 5, 10) // assert.strictEqual(add(5, 5), 10)
-    .case('abcde', 'fg', result => { // supply your own callback
+    .case('abcde', 'fg', function (result) { // supply your own callback
       assert.strictEqual(result, 'abcdefg')
-    }),
+      this.hey = 'ho'
+    })
+    .after(function () {
+      assert.strictEqual(this.hey, 'ho')
+    })
+    ,
 
   ThunkTest(
     'pipe: awesome username generator',
