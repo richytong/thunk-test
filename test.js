@@ -8,6 +8,18 @@ const add = (a, b) => a + b
 
 const tests = [
   ThunkTest('adds two values', add)
+    .after(function () {
+      assert.strictEqual(this.hello, 'world')
+      console.log('I should be at the end')
+    })
+    .before(function () {
+      this.hello = 'world'
+      console.log('I should be at the beginning')
+    })
+    .before(function () {
+      assert.strictEqual(this.hello, 'world')
+      console.log('I should be second at the beginning')
+    })
     .case(5, 5, 10) // assert.strictEqual(add(5, 5), 10)
     .case('abcde', 'fg', result => { // supply your own callback
       assert.strictEqual(result, 'abcdefg')

@@ -8,6 +8,8 @@ const objectAssign = Object.assign
 
 const isPromise = value => value != null && typeof value.then == 'function'
 
+const callPropUnary = (value, property, arg0) => value[property](arg0)
+
 const tapSync = func => function tapping(...args) {
   func(...args)
   return args[0]
@@ -32,6 +34,10 @@ const thunkify1 = (func, arg0) => function thunk() {
 
 const thunkify2 = (func, arg0, arg1) => function thunk() {
   return func(arg0, arg1)
+}
+
+const thunkify3 = (func, arg0, arg1, arg2) => function thunk() {
+  return func(arg0, arg1, arg2)
 }
 
 const __ = Symbol.for('placeholder')
@@ -423,6 +429,51 @@ const assertThrowsCallback = function (func, args, callback) {
 }
 
 /**
+ * @name thunkTestExecAsync
+ *
+ * @synopsis
+ * ```coffeescript [specscript]
+ * Thunk = ()=>any
+ *
+ * thunkTestExecAsync(operations Array<Thunk>, operationsIndex number) -> Promise<void>
+ * ```
+ */
+const thunkTestExecAsync = async function (
+  operations, operationsIndex,
+) {
+  const operationsLength = operations.length
+  while (++operationsIndex < operationsLength) {
+      const execution = operations[operationsIndex]()
+      if (isPromise(execution)) {
+        await execution
+      }
+  }
+}
+
+/**
+ * @name thunkTestExec
+ *
+ * @synopsis
+ * ```coffeescript [specscript]
+ * Thunk = ()=>any
+ *
+ * thunkTestExecAsync(operations Array<Thunk>, operationsIndex number) -> ()|Promise<void>
+ * ```
+ */
+const thunkTestExec = function (operations) {
+  const operationsLength = operations.length
+  let operationsIndex = -1
+  while (++operationsIndex < operationsLength) {
+      const execution = operations[operationsIndex]()
+      if (isPromise(execution)) {
+        return execution.then(thunkify2(
+          thunkTestExecAsync, operations, operationsIndex))
+      }
+  }
+}
+
+
+/**
  * @name ThunkTest
  *
  * @synopsis
@@ -442,14 +493,39 @@ const assertThrowsCallback = function (func, args, callback) {
  * @description
  * Modular testing for JavaScript.
  */
-
 const ThunkTest = function (name, ...funcs) {
-  const operations = []
+  const operations = [],
+    preprocessing = [],
+    postprocessing = []
   return objectAssign(function thunkTest() {
     log('--', name)
+    let cursor = null
+    cursor = thunkTestExec(preprocessing)
+    if (isPromise(cursor)) {
+      return cursor.then(funcConcat(
+        thunkify1(thunkTestExec, operations),
+        thunkify1(thunkTestExec, postprocessing),
+      ))
+    }
+    cursor = thunkTestExec(operations)
+    if (isPromise(cursor)) {
+      return cursor.then(thunkify1(thunkTestExec, postprocessing))
+    }
+    cursor = thunkTestExec(postprocessing)
+    if (isPromise(cursor)) {
+      return cursor.then(noop)
+    }
+
+      /*
+    log('--', name)
     const operationsLength = operations.length,
+      preprocessingLength = preprocessing.length,
+      postprocessingLength = postprocessing.length
       promises = []
-    let operationsIndex = -1
+    let operationsIndex = -1,
+      preprocessingIndex = -1,
+      postProcessingIndex = -1
+    while (++preprocessingIndex < )
     while (++operationsIndex < operationsLength) {
       const execution = operations[operationsIndex]()
       if (isPromise(execution)) {
@@ -457,7 +533,24 @@ const ThunkTest = function (name, ...funcs) {
       }
     }
     return promises.length == 0 ? this : promiseAll(promises).then(always(this))
+    */
   }, {
+
+    before(callback) {
+      preprocessing.push(funcConcat(
+        thunkify3(callPropUnary, callback, 'call', this),
+        tapSync(thunkify1(log, `-- ${funcInspect(callback)}`)),
+      ))
+      return this
+    },
+
+    after(callback) {
+      postprocessing.push(funcConcat(
+        thunkify3(callPropUnary, callback, 'call', this),
+        tapSync(thunkify1(log, `-- ${funcInspect(callback)}`)),
+      ))
+      return this
+    },
 
     case(...args) {
       const expected = args.pop()
