@@ -512,17 +512,17 @@ const thunkTestExec = function (operations) {
   const operationsLength = operations.length
   let operationsIndex = -1
   while (++operationsIndex < operationsLength) {
-      const execution = operations[operationsIndex]()
-      if (isPromise(execution)) {
-        return execution.then(thunkify2(
-          thunkTestExecAsync, operations, operationsIndex))
-      }
+    const execution = operations[operationsIndex]()
+    if (isPromise(execution)) {
+      return execution.then(thunkify2(
+        thunkTestExecAsync, operations, operationsIndex))
+    }
   }
 }
 
 
 /**
- * @name ThunkTest
+ * @name Test
  *
  * @synopsis
  * ```coffeescript [specscript]
@@ -532,7 +532,7 @@ const thunkTestExec = function (operations) {
  *   expectedResult any,
  *   expectedError Error|any
  *
- * ThunkTest(story, func) -> thunkTest ThunkTest {
+ * Test(story, func) -> thunkTest ()=>() {
  *   case: (...args, expectedResult)=>this,
  *   throws: (...args, expectedError)=>this,
  * }
@@ -542,22 +542,35 @@ const thunkTestExec = function (operations) {
  * Modular testing for JavaScript.
  */
 
-const ThunkTest = function (name, ...funcs) {
+const Test = function (...funcs) {
+  if (typeof this == null || this.constructor != Test) {
+    return new Test(...funcs)
+  }
+  let story = null
+  if (typeof funcs[0] == 'string') {
+    story = funcs.shift()
+  }
   const operations = [],
     preprocessing = [],
-    postprocessing = []
-  return objectAssign(function thunkTest() {
-    log('--', name)
+    postprocessing = [],
+    microPreprocessing = [],
+    microPostprocessing = []
+  return objectAssign((function thunkTest() {
+    if (story != null) {
+      log('--', story)
+    }
     let cursor = null
     cursor = thunkTestExec(preprocessing)
     if (isPromise(cursor)) {
       return cursor.then(funcConcat(
-        thunkify1(thunkTestExec, operations),
+        thunkify1(thunkTestExec, operations.flatMap(
+          operation => [...microPreprocessing, operation, ...microPostprocessing])),
         thunkify1(thunkTestExec, postprocessing),
       ))
     }
 
-    cursor = thunkTestExec(operations)
+    cursor = thunkTestExec(operations.flatMap(
+      operation => [...microPreprocessing, operation, ...microPostprocessing]))
     if (isPromise(cursor)) {
       return cursor.then(thunkify1(thunkTestExec, postprocessing))
     }
@@ -565,21 +578,25 @@ const ThunkTest = function (name, ...funcs) {
     if (isPromise(cursor)) {
       return cursor.then(noop)
     }
-  }, {
+  }).bind(this), {
 
     before(callback) {
-      preprocessing.push(funcConcat(
-        thunkify3(callPropUnary, callback, 'call', this),
-        tapSync(thunkify1(log, `-- ${funcInspect(callback)}`)),
-      ))
+      preprocessing.push(thunkify3(callPropUnary, callback, 'call', this))
       return this
     },
 
     after(callback) {
-      postprocessing.push(funcConcat(
-        thunkify3(callPropUnary, callback, 'call', this),
-        tapSync(thunkify1(log, `-- ${funcInspect(callback)}`)),
-      ))
+      postprocessing.push(thunkify3(callPropUnary, callback, 'call', this))
+      return this
+    },
+
+    beforeEach(callback) {
+      microPreprocessing.push(thunkify3(callPropUnary, callback, 'call', this))
+      return this
+    },
+
+    afterEach(callback) {
+      microPostprocessing.push(thunkify3(callPropUnary, callback, 'call', this))
       return this
     },
 
@@ -646,4 +663,4 @@ const ThunkTest = function (name, ...funcs) {
   })
 }
 
-module.exports = ThunkTest
+module.exports = Test

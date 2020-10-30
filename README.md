@@ -1,30 +1,29 @@
 # ThunkTest
-Modular testing for JavaScript. Set up tests as thunks, then execute them with a call.
+Modular testing for JavaScript. Declare tests as thunks, then execute them with a call.
 
 ```javascript
-const assert = require('assert')
-const identity = require('./identity')
-const ThunkTest = require('thunk-test')
+const Test = require('thunk-test')
+
+const identity = value => value
 
 describe('identity', () => {
-  it('returns whatever was passed to it', ThunkTest('identity', identity)
-    .case(1, 1)
-    .case('hey', 'hey')
-    .case(NaN, result => assert(isNaN(result)))
-  )
+  it('returns whatever was passed to it',
+    Test(identity)
+      .case(1, 1)
+      .case('hey', 'hey')
+      .case(NaN, result => assert(isNaN(result))))
 })
 //   identity
-// -- identity
 //  ✓ identity(1) -> 1
 //  ✓ identity('hey') -> 'hey'
 //  ✓ identity(NaN) |> result => assert(isNaN(result))
 //     ✓ returns whatever was passed to it
 ```
 
-ThunkTests are composed of a string descriptor, a function to test, and test cases denoted by `.case` and `.throws`.
+thunk Tests are composed of a string descriptor, a function to test, and test cases denoted by `.case` and `.throws`.
 
 ```javascript
-ThunkTest(
+Test(
   'pipe: awesome username generator',
   pipe([
     string => string.toUpperCase(),
@@ -59,10 +58,38 @@ ThunkTest(
 //     }
 ```
 
+Preprocessing and postprocessing are available with callbacks supplied to `.before` and `.after`.
+
+Note: all callbacks are run with the same context, meaning we can get and set values in the execution context (`this`) of a thunk Test from any provided callback.
+
+```javascript
+Test('square', number => number ** 2)
+  .before(function () {
+    this.hello = 'world'
+  })
+  .case([1, 2, 3, 4, 5], function (squaredArray) {
+    assert.deepEqual(squaredArray, [1, 2, 3, 4, 5])
+    assert(this.hello == 'world')
+  })
+  .after(function () {
+    assert(this.hello == 'world')
+  })()
+```
+
+Additionally, use a custom object as a starting point for a thunk Test's context with `.call`.
+
+```javascript
+Test('hey', function () {
+  return this.value
+}).case(null, 1).call({ value: 'ayo' })
+```
+
 ### Syntax
 ```coffeescript
-ThunkTest(story string, func function) -> thunkTest ()=>() {
-  case: (...args, expectedResult)=>this,
+Test(story string, func function) -> test ()=>() {
+  before: function=>this,
+  after: function=>this,
+  case: (...args, expectedResult|function=>())=>this,
   throws: (...args, expectedError)=>this,
 }
 ```
@@ -73,12 +100,12 @@ with `npm`
 npm i thunk-test
 ```
 
-browser script, global `ThunkTest`
+browser script, global `Test`
 ```html
 <script src="https://unpkg.com/thunk-test"></script>
 ```
 
 browser module
 ```javascript
-import ThunkTest from 'https://unpkg.com/thunk-test/es.js'
+import Test from 'https://unpkg.com/thunk-test/es.js'
 ```
