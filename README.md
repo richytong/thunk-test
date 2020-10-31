@@ -60,7 +60,7 @@ Test(
 
 Preprocessing and postprocessing are available with callbacks supplied to `.before` and `.after`.
 
-Note: all callbacks are run with the same context, meaning we can get and set values in the execution context (`this`) of a thunk Test from any provided callback.
+Note: since all callbacks are run with the same context, you can get and set values in the execution context (`this`) of a thunk Test from any provided callback.
 
 ```javascript
 Test('square', number => number ** 2)
@@ -74,14 +74,6 @@ Test('square', number => number ** 2)
   .after(function () {
     assert(this.hello == 'world')
   })()
-```
-
-Additionally, use a custom object as a starting point for a thunk Test's context with `.call`.
-
-```javascript
-Test('hey', function () {
-  return this.value
-}).case(null, 1).call({ value: 'ayo' })
 ```
 
 ### Syntax
