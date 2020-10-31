@@ -78,12 +78,18 @@ Test('square', number => number ** 2)
 
 ### Syntax
 ```coffeescript
-Test(story string, func function) -> test ()=>() {
+ThunkTest = ()=>() {
   before: function=>this,
   after: function=>this,
+  beforeEach: function=>this,
+  afterEach: function=>this,
   case: (...args, expectedResult|function=>())=>this,
   throws: (...args, expectedError)=>this,
 }
+
+Test(story string, func function) -> ThunkTest
+
+Test(func function) -> ThunkTest
 ```
 
 # Installation
