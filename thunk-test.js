@@ -520,7 +520,6 @@ const thunkTestExec = function (operations) {
   }
 }
 
-
 /**
  * @name Test
  *
@@ -541,6 +540,16 @@ const thunkTestExec = function (operations) {
  * @description
  * Modular testing for JavaScript.
  */
+
+const arrayFlatMap = function (array, flatMapper) {
+  const arrayLength = array.length,
+    result = []
+  let arrayIndex = -1
+  while (++arrayIndex < arrayLength) {
+    result.push(...flatMapper(array[arrayIndex]))
+  }
+  return result
+}
 
 const Test = function (...funcs) {
   if (typeof this == null || this.constructor != Test) {
@@ -563,13 +572,15 @@ const Test = function (...funcs) {
     cursor = thunkTestExec(preprocessing)
     if (isPromise(cursor)) {
       return cursor.then(funcConcat(
-        thunkify1(thunkTestExec, operations.flatMap(
+        thunkify1(thunkTestExec, arrayFlatMap(
+          operations,
           operation => [...microPreprocessing, operation, ...microPostprocessing])),
         thunkify1(thunkTestExec, postprocessing),
       ))
     }
 
-    cursor = thunkTestExec(operations.flatMap(
+    cursor = thunkTestExec(arrayFlatMap(
+      operations,
       operation => [...microPreprocessing, operation, ...microPostprocessing]))
     if (isPromise(cursor)) {
       return cursor.then(thunkify1(thunkTestExec, postprocessing))

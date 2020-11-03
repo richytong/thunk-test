@@ -11,7 +11,7 @@ const tests = [
     .after(function () {
       assert.strictEqual(this.hey, 'ho')
     })
-    .after(function () {
+    .after(async function () {
       assert.strictEqual(this.hello, 'world')
       console.log('I should be at the end')
       assert.strictEqual(this.microPreCount, 2)
@@ -21,7 +21,7 @@ const tests = [
       this.hello = 'world'
       console.log('I should be at the beginning')
     })
-    .before(function () {
+    .before(async function () {
       assert.strictEqual(this.hello, 'world')
       console.log('I should be second at the beginning')
       this.microPreCount = 0
