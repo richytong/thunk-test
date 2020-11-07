@@ -1,6 +1,6 @@
 {
   "name": "thunk-test",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "description": "Modular testing for JavaScript",
   "author": "Richard Tong",
   "license": "MIT",
