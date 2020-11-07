@@ -491,10 +491,16 @@ const thunkTestExecAsync = async function (
 ) {
   const operationsLength = operations.length
   while (++operationsIndex < operationsLength) {
-      const execution = operations[operationsIndex]()
-      if (isPromise(execution)) {
-        await execution
+    let execution = operations[operationsIndex]()
+    if (isPromise(execution)) {
+      execution = await execution
+    }
+    if (typeof execution == 'function') {
+      let cleanup = execution()
+      if (isPromise(cleanup)) {
+        await cleanup
       }
+    }
   }
 }
 
@@ -514,8 +520,17 @@ const thunkTestExec = function (operations) {
   while (++operationsIndex < operationsLength) {
     const execution = operations[operationsIndex]()
     if (isPromise(execution)) {
-      return execution.then(thunkify2(
-        thunkTestExecAsync, operations, operationsIndex))
+      return execution.then(funcConcat(
+        tapSync(res => typeof res == 'function' && res()),
+        thunkify2(thunkTestExecAsync, operations, operationsIndex),
+      ))
+    } else if (typeof execution == 'function') {
+      const cleanup = execution()
+      if (isPromise(cleanup)) {
+        return cleanup.then(
+          thunkify2(thunkTestExecAsync, operations, operationsIndex),
+        )
+      }
     }
   }
 }
@@ -525,16 +540,18 @@ const thunkTestExec = function (operations) {
  *
  * @synopsis
  * ```coffeescript [specscript]
- * var story string,
- *   func function,
- *   args ...any,
- *   expectedResult any,
- *   expectedError Error|any
- *
- * Test(story, func) -> thunkTest ()=>() {
- *   case: (...args, expectedResult)=>this,
- *   throws: (...args, expectedError)=>this,
+ * ThunkTest = ()=>() {
+ *   before: function=>this,
+ *   after: function=>this,
+ *   beforeEach: function=>this,
+ *   afterEach: function=>this,
+ *   case: (...args, expectedResult|function=>(disposer ()=>())|())=>this,
+ *   throws: (...args, expectedError|function=>(disposer ()=>())|())=>this,
  * }
+ *
+ * Test(story string, func function) -> ThunkTest
+ *
+ * Test(func function) -> ThunkTest
  * ```
  *
  * @description

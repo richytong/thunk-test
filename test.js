@@ -84,6 +84,31 @@ const tests = [
   }).case(function () {
     assert.strictEqual(this.value, 'hey')
   }),
+
+  Test('disposer test', function range(from, to) {
+    const result = []
+    for (let i = from; i < to; i++) {
+      result.push(i)
+    }
+    return result
+  })
+  .case(1, 6, function (numbers) {
+    assert.deepEqual(numbers, [1, 2, 3, 4, 5])
+    return () => {
+      this.hey = 'ho'
+    }
+  })
+  .case(0, 0, function (empty) {
+    assert(Array.isArray(empty))
+    assert(empty.length == 0)
+    return async () => {
+      this.heyy = 'hoo'
+    }
+  })
+  .after(function () {
+    assert.strictEqual(this.hey, 'ho')
+    assert.strictEqual(this.heyy, 'hoo')
+  })
 ]
 
 

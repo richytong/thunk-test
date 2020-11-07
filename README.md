@@ -83,8 +83,8 @@ ThunkTest = ()=>() {
   after: function=>this,
   beforeEach: function=>this,
   afterEach: function=>this,
-  case: (...args, expectedResult|function=>())=>this,
-  throws: (...args, expectedError)=>this,
+  case: (...args, expectedResult|function=>(disposer ()=>Promise<>|())|())=>this,
+  throws: (...args, expectedError|function=>(disposer ()=>Promise<>|())|())=>this,
 }
 
 Test(story string, func function) -> ThunkTest
