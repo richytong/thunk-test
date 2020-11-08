@@ -63,8 +63,9 @@ Preprocessing and postprocessing are available with callbacks supplied to `.befo
 Note: since all callbacks are run with the same context, you can get and set values in the execution context (`this`) of a thunk Test from any provided callback.
 
 ```javascript
-Test('square', number => number ** 2)
-  .before(function () {
+Test('square', function square(number) {
+  return number ** 2
+}).before(function () {
     this.hello = 'world'
   })
   .case(3, function (squared) {
@@ -74,6 +75,11 @@ Test('square', number => number ** 2)
   .after(function () {
     assert(this.hello == 'world')
   })()
+// -- square
+// ✓ square(3) |> function (squared) {
+//    assert(squared == 9)
+//    assert(this.hello == 'world')
+//  }
 ```
 
 ### Syntax
