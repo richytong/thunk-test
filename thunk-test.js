@@ -629,21 +629,22 @@ const Test = function (...funcs) {
     },
 
     case(...args) {
-      const expected = args.pop()
+      const expected = args.pop(),
+        boundArgs = args.map(arg => typeof arg == 'function' ? arg.bind(this) : arg)
       if (typeof expected == 'function') {
         for (const func of funcs) {
           operations.push([
-            thunkify4(callPropBinary, func, 'apply', this, args),
+            thunkify4(callPropBinary, func, 'apply', this, boundArgs),
             curry4(callPropBinary, expected, 'call', this, __),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} |> ${funcInspect(expected)}`)),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} |> ${funcInspect(expected)}`)),
           ].reduce(funcConcat))
         }
       } else {
         for (const func of funcs) {
           operations.push([
-            thunkify4(callPropBinary, func, 'apply', this, args),
+            thunkify4(callPropBinary, func, 'apply', this, boundArgs),
             curry2(assertEqual, expected, __),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} -> ${inspect(expected)}`)),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} -> ${inspect(expected)}`)),
           ].reduce(funcConcat))
         }
       }
@@ -651,24 +652,25 @@ const Test = function (...funcs) {
     },
 
     throws(...args) {
-      const expected = args.pop()
+      const expected = args.pop(),
+        boundArgs = args.map(arg => typeof arg == 'function' ? arg.bind(this) : arg)
       if (typeof expected == 'function') {
         for (const func of funcs) {
           operations.push(function tryCatching() {
             try {
-              const execution = func(...args)
+              const execution = func(...boundArgs)
               if (isPromise(execution)) {
                 return execution.then(thunkify1(throwAssertionError, 'did not throw'))
               }
 
             } catch (error) {
-              const execution = expected(error, ...args)
+              const execution = expected(error, ...boundArgs)
               if (isPromise(execution)) {
                 return execution.then(funcConcat(
-                  tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws; ${funcInspect(expected)}`)),
+                  tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expected)}`)),
                   noop))
               }
-              log(` ✓ ${funcSignature(func, args)} throws; ${funcInspect(expected)}`)
+              log(` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expected)}`)
               return undefined
             }
             throw AssertionError('did not throw')
@@ -680,9 +682,9 @@ const Test = function (...funcs) {
           operations.push(funcConcat(
             thunkify2(
               assertThrows,
-              thunkify4(callPropBinary, func, 'apply', this, args),
+              thunkify4(callPropBinary, func, 'apply', this, boundArgs),
               expected),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws ${errorInspect(expected)}`)),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws ${errorInspect(expected)}`)),
           ))
         }
       }

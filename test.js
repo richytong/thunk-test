@@ -85,6 +85,15 @@ const tests = [
     assert.strictEqual(this.value, 'hey')
   }),
 
+  Test('context case args test', function unaryCall(func, value) {
+    return func(value)
+  }).case(function setContextIdentity(value) {
+    this.value = value
+    return value
+  }, 1, 1).after(function checker() {
+    assert(this.value === 1)
+  }),
+
   Test('disposer test', function range(from, to) {
     const result = []
     for (let i = from; i < to; i++) {
