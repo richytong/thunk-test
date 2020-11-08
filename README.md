@@ -67,8 +67,8 @@ Test('square', number => number ** 2)
   .before(function () {
     this.hello = 'world'
   })
-  .case([1, 2, 3, 4, 5], function (squaredArray) {
-    assert.deepEqual(squaredArray, [1, 4, 9, 16, 25])
+  .case(3, function (squared) {
+    assert(squared == 9)
     assert(this.hello == 'world')
   })
   .after(function () {
