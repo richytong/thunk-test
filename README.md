@@ -20,7 +20,7 @@ describe('identity', () => {
 //     ✓ returns whatever was passed to it
 ```
 
-thunk Tests are composed of a string descriptor, a function to test, and test cases denoted by `.case` and `.throws`.
+thunk Tests are composed of a string descriptor, a function to test, and test cases denoted by `.case` and `.throws`. Additionally, any test cases may be asynchronous - either by returning a Promise explicitly or using the `async` keyword.
 
 ```javascript
 Test(
