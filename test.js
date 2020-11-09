@@ -1,4 +1,4 @@
-const Test = require('./thunk-test')
+const Test = require('.')
 const assert = require('assert')
 const rubico = require('rubico')
 

@@ -330,18 +330,18 @@ const isDeepEqual = function (leftItem, rightItem) {
  *
  * @synopsis
  * ```coffeescript [specscript]
- * assertEqual(expected any, actual any) -> boolean
+ * assertEqual(expect any, actual any) -> boolean
  * ```
  */
-const assertEqual = function (expected, actual) {
-  if (typeof expected == 'object' && typeof actual == 'object') {
-    if (!isDeepEqual(expected, actual)) {
-      log('expected', expected)
+const assertEqual = function (expect, actual) {
+  if (typeof expect == 'object' && typeof actual == 'object') {
+    if (!isDeepEqual(expect, actual)) {
+      log('expect', expect)
       log('actual', actual)
       throw AssertionError('not deep equal')
     }
-  } else if (expected !== actual) {
-    log('expected', expected)
+  } else if (expect !== actual) {
+    log('expect', expect)
     log('actual', actual)
     throw AssertionError('not strict equal')
   }
@@ -397,18 +397,18 @@ const errorInspect = error => `${error.name}('${error.message}')`
  * ```coffeescript [specscript]
  * Error = { name: string, message: string }
  *
- * errorAssertEqual(expected Error, actual Error)
+ * errorAssertEqual(expect Error, actual Error)
  * ```
  */
-const errorAssertEqual = function (expected, actual) {
-  if (actual.name != expected.name) {
+const errorAssertEqual = function (expect, actual) {
+  if (actual.name != expect.name) {
     log()
-    log('-- expect:', expected.name)
+    log('-- expect:', expect.name)
     log('-- actual:', actual.name)
     throw AssertionError('error names are different')
-  } else if (actual.message != expected.message) {
+  } else if (actual.message != expect.message) {
     log()
-    log('-- expect:', expected.message)
+    log('-- expect:', expect.message)
     log('-- actual:', actual.message)
     throw AssertionError('error messages are different')
   }
@@ -629,22 +629,22 @@ const Test = function (...funcs) {
     },
 
     case(...args) {
-      const expected = args.pop(),
+      const expect = args.pop(),
         boundArgs = args.map(arg => typeof arg == 'function' ? arg.bind(this) : arg)
-      if (typeof expected == 'function') {
+      if (typeof expect == 'function') {
         for (const func of funcs) {
           operations.push([
             thunkify4(callPropBinary, func, 'apply', this, boundArgs),
-            curry4(callPropBinary, expected, 'call', this, __),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} |> ${funcInspect(expected)}`)),
+            curry4(callPropBinary, expect, 'call', this, __),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} |> ${funcInspect(expect)}`)),
           ].reduce(funcConcat))
         }
       } else {
         for (const func of funcs) {
           operations.push([
             thunkify4(callPropBinary, func, 'apply', this, boundArgs),
-            curry2(assertEqual, expected, __),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} -> ${inspect(expected)}`)),
+            curry2(assertEqual, expect, __),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} -> ${inspect(expect)}`)),
           ].reduce(funcConcat))
         }
       }
@@ -652,9 +652,9 @@ const Test = function (...funcs) {
     },
 
     throws(...args) {
-      const expected = args.pop(),
+      const expect = args.pop(),
         boundArgs = args.map(arg => typeof arg == 'function' ? arg.bind(this) : arg)
-      if (typeof expected == 'function') {
+      if (typeof expect == 'function') {
         for (const func of funcs) {
           operations.push(function tryCatching() {
             try {
@@ -664,13 +664,13 @@ const Test = function (...funcs) {
               }
 
             } catch (error) {
-              const execution = expected(error, ...boundArgs)
+              const execution = expect(error, ...boundArgs)
               if (isPromise(execution)) {
                 return execution.then(funcConcat(
-                  tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expected)}`)),
+                  tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expect)}`)),
                   noop))
               }
-              log(` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expected)}`)
+              log(` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expect)}`)
               return undefined
             }
             throw AssertionError('did not throw')
@@ -683,8 +683,8 @@ const Test = function (...funcs) {
             thunkify2(
               assertThrows,
               thunkify4(callPropBinary, func, 'apply', this, boundArgs),
-              expected),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws ${errorInspect(expected)}`)),
+              expect),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws ${errorInspect(expect)}`)),
           ))
         }
       }
