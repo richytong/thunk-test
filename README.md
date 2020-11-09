@@ -1,4 +1,7 @@
 # ThunkTest
+
+![Node.js CI](https://github.com/richytong/thunk-test/workflows/Node.js%20CI/badge.svg?branch=master)
+
 Modular testing for JavaScript. Declare tests as thunks, then execute them with a call.
 
 ```javascript
