@@ -134,7 +134,7 @@ const inspect = function (value, depth = 1) {
     if (value.size == 0) {
       return 'Set {}'
     }
-    let result = `Set { `
+    let result = 'Set { '
     const resultValues = []
     for (const item of value) {
       resultValues.push(inspectDeeper(item))
@@ -496,7 +496,7 @@ const thunkTestExecAsync = async function (
       execution = await execution
     }
     if (typeof execution == 'function') {
-      let cleanup = execution()
+      const cleanup = execution()
       if (isPromise(cleanup)) {
         await cleanup
       }
@@ -533,6 +533,7 @@ const thunkTestExec = function (operations) {
       }
     }
   }
+  return undefined
 }
 
 /**
@@ -569,7 +570,7 @@ const arrayFlatMap = function (array, flatMapper) {
 }
 
 const Test = function (...funcs) {
-  if (typeof this == null || this.constructor != Test) {
+  if (this == null || this.constructor != Test) {
     return new Test(...funcs)
   }
   let story = null
@@ -581,7 +582,7 @@ const Test = function (...funcs) {
     postprocessing = [],
     microPreprocessing = [],
     microPostprocessing = []
-  return objectAssign((function thunkTest() {
+  return objectAssign(function thunkTest() {
     if (story != null) {
       log('--', story)
     }
@@ -606,7 +607,8 @@ const Test = function (...funcs) {
     if (isPromise(cursor)) {
       return cursor.then(noop)
     }
-  }).bind(this), {
+    return undefined
+  }, {
 
     before(callback) {
       preprocessing.push(thunkify3(callPropUnary, callback, 'call', this))
