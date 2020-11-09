@@ -336,13 +336,13 @@ const isDeepEqual = function (leftItem, rightItem) {
 const assertEqual = function (expect, actual) {
   if (typeof expect == 'object' && typeof actual == 'object') {
     if (!isDeepEqual(expect, actual)) {
-      log('expect', expect)
-      log('actual', actual)
+      log('expect', inspect(expect))
+      log('actual', inspect(actual))
       throw AssertionError('not deep equal')
     }
   } else if (expect !== actual) {
-    log('expect', expect)
-    log('actual', actual)
+    log('expect', inspect(expect))
+    log('actual', inspect(actual))
     throw AssertionError('not strict equal')
   }
   return undefined
