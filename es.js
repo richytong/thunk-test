@@ -134,7 +134,7 @@ const inspect = function (value, depth = 1) {
     if (value.size == 0) {
       return 'Set {}'
     }
-    let result = `Set { `
+    let result = 'Set { '
     const resultValues = []
     for (const item of value) {
       resultValues.push(inspectDeeper(item))
@@ -215,12 +215,10 @@ const objectKeysLength = object => {
 
 const symbolIterator = Symbol.iterator
 
-/**
- * @name areIteratorsDeepEqual
- *
- * @synopsis
- * areIteratorsDeepEqual(left Iterator, right Iterator) -> boolean
- */
+const sameValueZero = function (left, right) {
+  return left === right || (left !== left && right !== right);
+}
+
 const areIteratorsDeepEqual = function (leftIterator, rightIterator) {
   let leftIteration = leftIterator.next(),
     rightIteration = rightIterator.next()
@@ -237,12 +235,6 @@ const areIteratorsDeepEqual = function (leftIterator, rightIterator) {
   return rightIteration.done
 }
 
-/**
- * @name areObjectsDeepEqual
- *
- * @synopsis
- * areObjectsDeepEqual(left Object, right Object) -> boolean
- */
 const areObjectsDeepEqual = function (leftObject, rightObject) {
   const leftKeysLength = objectKeysLength(leftObject),
     rightKeysLength = objectKeysLength(rightObject)
@@ -257,12 +249,6 @@ const areObjectsDeepEqual = function (leftObject, rightObject) {
   return true
 }
 
-/**
- * @name areArraysDeepEqual
- *
- * @synopsis
- * areArraysDeepEqual(left Array, right Array) -> boolean
- */
 const areArraysDeepEqual = function (leftArray, rightArray) {
   const length = leftArray.length
   if (rightArray.length != length) {
@@ -277,52 +263,36 @@ const areArraysDeepEqual = function (leftArray, rightArray) {
   return true
 }
 
-/**
- * @name isDeepEqual
- *
- * @synopsis
- * ```coffeescript [specscript]
- * Nested<T> = Array<Array<T>|Object<T>|Iterable<T>|T>|Object<Array<T>|Object<T>|Iterable<T>|T>
- *
- * var left Nested,
- *   right Nested
- *
- * isDeepEqual(left, right) -> boolean
- * ```
- *
- * @description
- * Check two values for deep strict equality.
- *
- * ```javascript [node]
- * console.log(
- *   isDeepEqual({ a: 1, b: 2, c: [3] }, { a: 1, b: 2, c: [3] }),
- * ) // true
- *
- * console.log(
- *   isDeepEqual({ a: 1, b: 2, c: [3] }, { a: 1, b: 2, c: [5] }),
- * ) // false
- * ```
- */
-const isDeepEqual = function (leftItem, rightItem) {
-  if (isArray(leftItem) && isArray(rightItem)) {
-    return areArraysDeepEqual(leftItem, rightItem)
-  } else if (
-    typeof leftItem == 'object' && typeof rightItem == 'object'
-      && leftItem != null && rightItem != null
-      && leftItem.constructor == rightItem.constructor
-      && typeof leftItem[symbolIterator] == 'function'
-      && typeof rightItem[symbolIterator] == 'function'
-  ) {
-    return areIteratorsDeepEqual(
-      leftItem[symbolIterator](), rightItem[symbolIterator]())
-  } else if (leftItem == null || rightItem == null) {
-    return leftItem === rightItem
-  } else if (
-    leftItem.constructor == Object && rightItem.constructor == Object
-  ) {
-    return areObjectsDeepEqual(leftItem, rightItem)
+const isDeepEqual = function (left, right) {
+  const isLeftArray = isArray(left),
+    isRightArray = isArray(right)
+  if (isLeftArray || isRightArray) {
+    return isLeftArray && isRightArray
+      && areArraysDeepEqual(left, right)
   }
-  return leftItem === rightItem
+  if (left == null || right == null) {
+    return sameValueZero(left, right)
+  }
+
+  const isLeftString = typeof left == 'string' || left.constructor == String,
+    isRightString = typeof right == 'string' || right.constructor == String
+  if (isLeftString || isRightString) {
+    return sameValueZero(left, right)
+  }
+  const isLeftIterable = typeof left[symbolIterator] == 'function',
+    isRightIterable = typeof right[symbolIterator] == 'function'
+  if (isLeftIterable || isRightIterable) {
+    return isLeftIterable && isRightIterable
+      && areIteratorsDeepEqual(left[symbolIterator](), right[symbolIterator]())
+  }
+
+  const isLeftObject = left.constructor == Object,
+    isRightObject = right.constructor == Object
+  if (isLeftObject || isRightObject) {
+    return isLeftObject && isRightObject
+      && areObjectsDeepEqual(left, right)
+  }
+  return sameValueZero(left, right)
 }
 
 /**
@@ -330,22 +300,15 @@ const isDeepEqual = function (leftItem, rightItem) {
  *
  * @synopsis
  * ```coffeescript [specscript]
- * assertEqual(expected any, actual any) -> boolean
+ * assertEqual(expect any, actual any) -> boolean
  * ```
  */
-const assertEqual = function (expected, actual) {
-  if (typeof expected == 'object' && typeof actual == 'object') {
-    if (!isDeepEqual(expected, actual)) {
-      log('expected', expected)
-      log('actual', actual)
-      throw AssertionError('not deep equal')
-    }
-  } else if (expected !== actual) {
-    log('expected', expected)
-    log('actual', actual)
-    throw AssertionError('not strict equal')
+const assertEqual = function (expect, actual) {
+  if (!isDeepEqual(expect, actual)) {
+    log('expect', inspect(expect))
+    log('actual', inspect(actual))
+    throw AssertionError('not equal')
   }
-  return undefined
 }
 
 /**
@@ -397,18 +360,18 @@ const errorInspect = error => `${error.name}('${error.message}')`
  * ```coffeescript [specscript]
  * Error = { name: string, message: string }
  *
- * errorAssertEqual(expected Error, actual Error)
+ * errorAssertEqual(expect Error, actual Error)
  * ```
  */
-const errorAssertEqual = function (expected, actual) {
-  if (actual.name != expected.name) {
+const errorAssertEqual = function (expect, actual) {
+  if (actual.name != expect.name) {
     log()
-    log('-- expect:', expected.name)
+    log('-- expect:', expect.name)
     log('-- actual:', actual.name)
     throw AssertionError('error names are different')
-  } else if (actual.message != expected.message) {
+  } else if (actual.message != expect.message) {
     log()
-    log('-- expect:', expected.message)
+    log('-- expect:', expect.message)
     log('-- actual:', actual.message)
     throw AssertionError('error messages are different')
   }
@@ -496,7 +459,7 @@ const thunkTestExecAsync = async function (
       execution = await execution
     }
     if (typeof execution == 'function') {
-      let cleanup = execution()
+      const cleanup = execution()
       if (isPromise(cleanup)) {
         await cleanup
       }
@@ -533,6 +496,7 @@ const thunkTestExec = function (operations) {
       }
     }
   }
+  return undefined
 }
 
 /**
@@ -569,7 +533,7 @@ const arrayFlatMap = function (array, flatMapper) {
 }
 
 const Test = function (...funcs) {
-  if (typeof this == null || this.constructor != Test) {
+  if (this == null || this.constructor != Test) {
     return new Test(...funcs)
   }
   let story = null
@@ -581,7 +545,7 @@ const Test = function (...funcs) {
     postprocessing = [],
     microPreprocessing = [],
     microPostprocessing = []
-  return objectAssign((function thunkTest() {
+  return objectAssign(function thunkTest() {
     if (story != null) {
       log('--', story)
     }
@@ -606,7 +570,8 @@ const Test = function (...funcs) {
     if (isPromise(cursor)) {
       return cursor.then(noop)
     }
-  }).bind(this), {
+    return undefined
+  }, {
 
     before(callback) {
       preprocessing.push(thunkify3(callPropUnary, callback, 'call', this))
@@ -629,22 +594,22 @@ const Test = function (...funcs) {
     },
 
     case(...args) {
-      const expected = args.pop(),
+      const expect = args.pop(),
         boundArgs = args.map(arg => typeof arg == 'function' ? arg.bind(this) : arg)
-      if (typeof expected == 'function') {
+      if (typeof expect == 'function') {
         for (const func of funcs) {
           operations.push([
             thunkify4(callPropBinary, func, 'apply', this, boundArgs),
-            curry4(callPropBinary, expected, 'call', this, __),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} |> ${funcInspect(expected)}`)),
+            curry4(callPropBinary, expect, 'call', this, __),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} |> ${funcInspect(expect)}`)),
           ].reduce(funcConcat))
         }
       } else {
         for (const func of funcs) {
           operations.push([
             thunkify4(callPropBinary, func, 'apply', this, boundArgs),
-            curry2(assertEqual, expected, __),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} -> ${inspect(expected)}`)),
+            curry2(assertEqual, expect, __),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} -> ${inspect(expect)}`)),
           ].reduce(funcConcat))
         }
       }
@@ -652,9 +617,9 @@ const Test = function (...funcs) {
     },
 
     throws(...args) {
-      const expected = args.pop(),
+      const expect = args.pop(),
         boundArgs = args.map(arg => typeof arg == 'function' ? arg.bind(this) : arg)
-      if (typeof expected == 'function') {
+      if (typeof expect == 'function') {
         for (const func of funcs) {
           operations.push(function tryCatching() {
             try {
@@ -664,13 +629,13 @@ const Test = function (...funcs) {
               }
 
             } catch (error) {
-              const execution = expected(error, ...boundArgs)
+              const execution = expect(error, ...boundArgs)
               if (isPromise(execution)) {
                 return execution.then(funcConcat(
-                  tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expected)}`)),
+                  tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expect)}`)),
                   noop))
               }
-              log(` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expected)}`)
+              log(` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expect)}`)
               return undefined
             }
             throw AssertionError('did not throw')
@@ -683,8 +648,8 @@ const Test = function (...funcs) {
             thunkify2(
               assertThrows,
               thunkify4(callPropBinary, func, 'apply', this, boundArgs),
-              expected),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws ${errorInspect(expected)}`)),
+              expect),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws ${errorInspect(expect)}`)),
           ))
         }
       }
