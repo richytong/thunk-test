@@ -13,9 +13,11 @@ const identity = value => value
 describe('identity', () => {
   it('returns whatever was passed to it',
     Test(identity)
-      .case(1, 1)
+      .case(+0, -0)
       .case('hey', 'hey')
-      .case(NaN, result => assert(isNaN(result))))
+      .case(NaN, result => {
+        assert(isNaN(result))
+      }))
 })
 //   identity
 //  ✓ identity(1) -> 1
@@ -24,7 +26,26 @@ describe('identity', () => {
 //     ✓ returns whatever was passed to it
 ```
 
-thunk Tests are composed of a string descriptor, a function to test, and test cases denoted by `.case` and `.throws`. Additionally, any test cases may be asynchronous - either by returning a Promise explicitly or using the `async` keyword.
+thunk Tests are composed of a string descriptor, a function to test, and test cases denoted by `.case` and `.throws`. Any test cases may be asynchronous - either by returning a Promise explicitly or using the `async` keyword. Both `.case` and `.throws` accept a variadic number of arguments - the same as those provided to the function - with the exception of the last argument:
+
+ * not a function - compare the return value directly by [SameValueZero](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
+ * an asserter function - pass the return value to theh asserter function and let the asserter handle all the assertions. Note that if this value is a Promise, it is resolved before calling this function
+
+```coffeescript
+Test(string, tester function)
+  .case(...args, expectedResult any)
+
+Test('my test', myFunc)
+  .case(...args, asserter (result any)=>Promise|())
+
+Test(string, tester function)
+  .throws(...args, expectedError Error)
+
+Test('my test', myFunc)
+  .throws(...args, errorAsserter (error Error, result any)=>Promise|())
+```
+
+Concisely test many different cases with a declarative, idiomatic API.
 
 ```javascript
 Test(
