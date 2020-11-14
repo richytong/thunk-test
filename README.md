@@ -32,17 +32,11 @@ thunk Tests are composed of a string descriptor, a function to test, and test ca
  * an asserter function - pass the return value to the asserter function and let the asserter handle all the assertions. Note that if this value is a Promise, it is resolved before calling this function
 
 ```coffeescript
-Test(string, tester function)
+Test(testname string, tester function)
   .case(...args, expectedResult any)
-
-Test('my test', myFunc)
-  .case(...args, asserter (result any)=>Promise|())
-
-Test(string, tester function)
+  .case(...args, asserter (result any)=>Promise|(disposer function)|null)
   .throws(...args, expectedError Error)
-
-Test('my test', myFunc)
-  .throws(...args, errorAsserter (error Error, result any)=>Promise|())
+  .throws(...args, errorAsserter (error Error, result any)=>Promise|(disposer function)|null)
 ```
 
 Concisely test many different cases with a declarative, idiomatic API.
