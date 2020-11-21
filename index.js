@@ -124,6 +124,9 @@ const inspect = function (value, depth = 1) {
   if (ArrayBuffer.isView(value)) {
     return `${value.constructor.name} [${value.join(', ')}]`
   }
+  if (typeof value == 'function') {
+    return value.toString()
+  }
   if (typeof value == 'string') {
     return depth == 0 ? value : `'${value}'`
   }
