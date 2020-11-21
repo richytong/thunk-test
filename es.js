@@ -124,6 +124,9 @@ const inspect = function (value, depth = 1) {
   if (ArrayBuffer.isView(value)) {
     return `${value.constructor.name} [${value.join(', ')}]`
   }
+  if (typeof value == 'function') {
+    return value.toString()
+  }
   if (typeof value == 'string') {
     return depth == 0 ? value : `'${value}'`
   }
@@ -339,7 +342,9 @@ const funcInspect = func => func.toString()
  * funcSignature(func function, args Array) -> funcRepresentation string
  * ```
  */
-const funcSignature = (func, args) => `${func.name || 'anonymous'}(${argsInspect(args)})`
+const funcSignature = (func, args) => func.name === ''
+  ? func.toString()
+  : `${func.name}(${argsInspect(args)})`
 
 /**
  * @name errorInspect
