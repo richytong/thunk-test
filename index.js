@@ -339,7 +339,9 @@ const funcInspect = func => func.toString()
  * funcSignature(func function, args Array) -> funcRepresentation string
  * ```
  */
-const funcSignature = (func, args) => `${func.name || 'anonymous'}(${argsInspect(args)})`
+const funcSignature = (func, args) => func.name === ''
+  ? func.toString()
+  : `${func.name}(${argsInspect(args)})`
 
 /**
  * @name errorInspect
