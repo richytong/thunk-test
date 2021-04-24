@@ -4,7 +4,7 @@
   "description": "Modular testing for JavaScript",
   "author": "Richard Tong",
   "license": "MIT",
-  "main": "thunk-test.js",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "github:richytong/thunk-test"
