@@ -509,7 +509,7 @@ const thunkTestExec = function (operations) {
  *
  * @synopsis
  * ```coffeescript [specscript]
- * ThunkTest = ()=>() {
+ * test = ()=>() {
  *   before: function=>this,
  *   after: function=>this,
  *   beforeEach: function=>this,
@@ -518,9 +518,9 @@ const thunkTestExec = function (operations) {
  *   throws: (...args, expectedError|function=>(disposer ()=>())|())=>this,
  * }
  *
- * Test(story string, func function) -> ThunkTest
+ * Test(story string, func function) -> test
  *
- * Test(func function) -> ThunkTest
+ * Test(func function) -> test
  * ```
  *
  * @description
@@ -661,6 +661,42 @@ const Test = function (...funcs) {
       return this
     },
   })
+}
+
+/**
+ * @name testAllAsync
+ *
+ * @synopsis
+ * ```coffeescript [specscript]
+ * testAllAsync(tests Array<Test>, index number) -> combinedTest ()=>Promise<>
+ * ```
+ */
+const testAllAsync = async function (tests, index) {
+  const length = tests.length
+  while (++index < length) {
+    await tests[index]()
+  }
+}
+
+/**
+ * @name Test.all
+ *
+ * @synopsis
+ * ```coffeescript [specscript]
+ * Test.all(tests Array<Test>) -> combinedTest ()=>{}
+ * ```
+ */
+Test.all = function TestAll(tests) {
+  return function testAll() {
+    const length = tests.length
+    let index = -1
+    while (++index < length) {
+      const execution = tests[index]()
+      if (isPromise(execution)) {
+        return execution.then(thunkify2(testAllAsync, tests, index))
+      }
+    }
+  }
 }
 
 module.exports = Test

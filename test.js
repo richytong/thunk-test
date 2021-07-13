@@ -117,7 +117,19 @@ const tests = [
   .after(function () {
     assert.strictEqual(this.hey, 'ho')
     assert.strictEqual(this.heyy, 'hoo')
-  })
+  }),
+
+  Test.all([
+    Test(function identity(value) {
+      return value
+    }).case(1, 1),
+    Test(async function identity(value) {
+      return value
+    }).case(2, 2),
+    Test(function identity(value) {
+      return value
+    }).case(3, 3),
+  ]),
 ]
 
 
