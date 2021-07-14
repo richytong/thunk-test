@@ -696,6 +696,7 @@ Test.all = function TestAll(tests) {
         return execution.then(thunkify2(testAllAsync, tests, index))
       }
     }
+    return undefined
   }
 }
 
