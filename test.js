@@ -130,6 +130,18 @@ const tests = [
       return value
     }).case(3, 3),
   ]),
+
+  Test.all([
+    Test(function identity(value) {
+      return value
+    }).case(1, 1),
+    Test(function identity(value) {
+      return value
+    }).case(2, 2),
+    Test(function identity(value) {
+      return value
+    }).case(3, 3),
+  ]),
 ]
 
 
