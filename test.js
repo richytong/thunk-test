@@ -53,7 +53,7 @@ const tests = [
     .throws(null, (err, arg0) => {
       assert.strictEqual(arg0, null)
       assert.strictEqual(err.name, 'TypeError')
-      assert.strictEqual(err.message, 'Cannot read property \'toUpperCase\' of null')
+      assert.strictEqual(err.message, 'Cannot read properties of null (reading \'toUpperCase\')')
     })
     .throws(NaN, async (err, arg0) => {
       assert.strictEqual(arg0, NaN)
