@@ -61,6 +61,28 @@ const tests = [
       assert.strictEqual(err.message, 'string.toUpperCase is not a function')
     }),
 
+  Test('pipe: awesome username generator async', pipe([
+    async string => string.toUpperCase(),
+    async string => `x${string}x`,
+    async string => `X${string}X`,
+    async string => `x${string}x`,
+    async string => `_${string}_`,
+  ]))
+    .case('deimos', '_xXxDEIMOSxXx_') // objects deep equal, otherwise strict equal
+    .case('|', result => assert.equal(result, '_xXx|xXx_')) // can supply a callback
+    .case('?', async result => assert.equal(result, '_xXx?xXx_')) // async ok
+    .throws(1, new TypeError('string.toUpperCase is not a function'))
+    .throws(null, (err, arg0) => {
+      assert.strictEqual(arg0, null)
+      assert.strictEqual(err.name, 'TypeError')
+      assert.strictEqual(err.message, 'Cannot read properties of null (reading \'toUpperCase\')')
+    })
+    .throws(NaN, async (err, arg0) => {
+      assert.strictEqual(arg0, NaN)
+      assert.strictEqual(err.name, 'TypeError')
+      assert.strictEqual(err.message, 'string.toUpperCase is not a function')
+    }),
+
   Test('assign',
     assign({
       squared: ({ number }) => number ** 2,

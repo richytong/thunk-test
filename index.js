@@ -406,39 +406,15 @@ const assertThrows = function (func, expectedError) {
   try {
     const execution = func()
     if (isPromise(execution)) {
-      return execution.then(funcConcat(
-        thunkify1(throwAssertionError, 'did not throw'),
-        curry2(errorAssertEqual, expectedError, __)))
+      return execution
+        .then(funcConcat(
+          thunkify1(throwAssertionError, 'did not throw'),
+          curry2(errorAssertEqual, expectedError, __)
+        ))
+        .catch(curry2(errorAssertEqual, expectedError, __))
     }
   } catch (error) {
     errorAssertEqual(expectedError, error)
-    return undefined
-  }
-  throw AssertionError('did not throw')
-}
-
-/**
- * @name assertThrowsCallback
- *
- * @synopsis
- * ```coffeescript [specscript]
- * assertThrowsCallback(func ()=>Promise|any, args Array, callback (Error, ...any)=>())
- * ```
- */
-const assertThrowsCallback = function (func, args, callback) {
-  try {
-    const execution = func(...args)
-    if (isPromise(execution)) {
-      return execution.then(thunkify1(throwAssertionError, 'did not throw'))
-    }
-  } catch (error) {
-    const execution = callback(error, ...args)
-    if (isPromise(execution)) {
-      return execution.then(funcConcat(
-      tapSync(thunkify1(log, ` ✓ ${funcSignature(func, args)} throws ${funcInspect(callback)}`)),
-        noop))
-    }
-    log(` ✓ ${funcSignature(func, args)} throws ${funcInspect(callback)}`)
     return undefined
   }
   throw AssertionError('did not throw')
@@ -626,11 +602,22 @@ const Test = function (...funcs) {
         boundArgs = args.map(arg => typeof arg == 'function' ? arg.bind(this) : arg)
       if (typeof expect == 'function') {
         for (const func of funcs) {
-          operations.push(function tryCatching() {
+          operations.push(function _tryCatch() {
             try {
               const execution = func(...boundArgs)
               if (isPromise(execution)) {
-                return execution.then(thunkify1(throwAssertionError, 'did not throw'))
+                return execution
+                  .then(thunkify1(throwAssertionError, 'did not throw'))
+                  .catch(error => {
+                    const execution = expect(error, ...boundArgs)
+                    if (isPromise(execution)) {
+                      return execution.then(funcConcat(
+                        tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expect)}`)),
+                        noop))
+                    }
+                    log(` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expect)}`)
+                    return undefined
+                  })
               }
 
             } catch (error) {
