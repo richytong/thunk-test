@@ -1,6 +1,7 @@
 const Test = require('.')
 const assert = require('assert')
 const rubico = require('rubico')
+const stream = require('stream')
 
 const { pipe, assign } = rubico
 
@@ -164,6 +165,24 @@ const tests = [
       return value
     }).case(3, 3),
   ]),
+
+  Test('repr', function identity(value) { return value })
+    .case(1, 1)
+    .case('a', 'a')
+    .case([], [])
+    .case([1, 2, 3], [1, 2, 3])
+    .case(['a', 'b', 'c'], ['a', 'b', 'c'])
+    .case(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]))
+    .case(Buffer.from([1, 2, 3]), Buffer.from([1, 2, 3]))
+    .case(new Set([1, 2, 3]), new Set([1, 2, 3]))
+    .case(new Set([{ a: 1 }, { b: 2 }, { c: 3 }]), new Set([{ a: 1 }, { b: 2 }, { c: 3 }]))
+    .case(new Set(), new Set())
+    .case(new Map([['a', 1]]), new Map([['a', 1]]))
+    .case(new Map([['a', 1], ['b', 2], ['c', 3]]), new Map([['a', 1], ['b', 2], ['c', 3]]))
+    .case({}, {})
+    .case({ a: 1, b: 2, c: 3 }, { a: 1, b: 2, c: 3 })
+    .case(new Error('test'), new Error('test'))
+    .case(new TypeError('test1'), new TypeError('test1'))
 ]
 
 

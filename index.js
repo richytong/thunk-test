@@ -132,7 +132,7 @@ const repr = function (value, depth = 1) {
     return `[${value.map(reprDeep).join(', ')}]`
   }
   if (ArrayBuffer.isView(value)) {
-    return `${value.constructor.name} [${value.join(', ')}]`
+    return `${value.constructor.name}([${value.join(', ')}])`
   }
   if (typeof value == 'function') {
     return value.toString()
@@ -140,33 +140,36 @@ const repr = function (value, depth = 1) {
   if (typeof value == 'string') {
     return depth == 0 ? value : `'${value}'`
   }
-  if (value == null) {
-    return `${value}`
+  if (value === null) {
+    return 'null'
+  }
+  if (value === undefined) {
+    return 'undefined'
   }
   if (value.constructor == Set) {
     if (value.size == 0) {
-      return 'Set {}'
+      return 'Set()'
     }
-    let result = 'Set { '
+    let result = 'Set(['
     const resultValues = []
     for (const item of value) {
       resultValues.push(reprDeep(item))
     }
     result += resultValues.join(', ')
-    result += ' }'
+    result += '])'
     return result
   }
   if (value.constructor == Map) {
     if (value.size == 0) {
-      return 'Map {}'
+      return 'm Map {}'
     }
-    let result = 'Map { '
+    let result = 'Map(['
     const entries = []
     for (const [key, item] of value) {
-      entries.push(`${reprDeep(key)} => ${reprDeep(item)}`)
+      entries.push(`[${reprDeep(key)}, ${reprDeep(item)}]`)
     }
     result += entries.join(', ')
-    result += ' }'
+    result += '])'
     return result
   }
   if (value.constructor == Object) {
@@ -183,7 +186,7 @@ const repr = function (value, depth = 1) {
     return result
   }
   if (value instanceof Error) {
-    return `${value.name}: ${value.message}`
+    return `${value.name}('${value.message}')`
   }
   if (typeof value.constructor == 'function') {
     return `${value.constructor.name} {}`
@@ -320,7 +323,11 @@ const isDeepEqual = function (left, right) {
  * ```
  */
 const assertEqual = function (expect, actual) {
-  if (!isDeepEqual(expect, actual)) {
+  if (expect instanceof Error) {
+    assertEqual(expect.name, actual.name)
+    assertEqual(expect.message, actual.message)
+  }
+  else if (!isDeepEqual(expect, actual)) {
     log('expect', repr(expect))
     log('actual', repr(actual))
     throw AssertionError('not equal')
