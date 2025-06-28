@@ -1,5 +1,5 @@
 /**
- * thunk-test v1.3.2
+ * thunk-test v1.3.3
  * https://github.com/richytong/thunk-test
  * (c) 2025 Richard Tong
  * thunk-test may be freely distributed under the MIT license.
@@ -123,13 +123,16 @@ const curry4 = function (baseFunc, arg0, arg1, arg2, arg3) {
 
 const promiseAll = Promise.all.bind(Promise)
 
-const inspect = function (value, depth = 1) {
-  const inspectDeeper = item => inspect(item, depth + 1)
+const repr = function (value, depth = 1) {
+  const reprDeep = item => repr(item, depth + 1)
+  if (typeof value == 'number') {
+    return `${value}`
+  }
   if (Array.isArray(value)) {
-    return `[${value.map(inspectDeeper).join(', ')}]`
+    return `[${value.map(reprDeep).join(', ')}]`
   }
   if (ArrayBuffer.isView(value)) {
-    return `${value.constructor.name} [${value.join(', ')}]`
+    return `${value.constructor.name}([${value.join(', ')}])`
   }
   if (typeof value == 'function') {
     return value.toString()
@@ -137,33 +140,36 @@ const inspect = function (value, depth = 1) {
   if (typeof value == 'string') {
     return depth == 0 ? value : `'${value}'`
   }
-  if (value == null) {
-    return `${value}`
+  if (value === null) {
+    return 'null'
+  }
+  if (value === undefined) {
+    return 'undefined'
   }
   if (value.constructor == Set) {
     if (value.size == 0) {
-      return 'Set {}'
+      return 'Set()'
     }
-    let result = 'Set { '
+    let result = 'Set(['
     const resultValues = []
     for (const item of value) {
-      resultValues.push(inspectDeeper(item))
+      resultValues.push(reprDeep(item))
     }
     result += resultValues.join(', ')
-    result += ' }'
+    result += '])'
     return result
   }
   if (value.constructor == Map) {
     if (value.size == 0) {
-      return 'Map {}'
+      return 'Map()'
     }
-    let result = 'Map { '
+    let result = 'Map(['
     const entries = []
     for (const [key, item] of value) {
-      entries.push(`${inspectDeeper(key)} => ${inspectDeeper(item)}`)
+      entries.push(`[${reprDeep(key)}, ${reprDeep(item)}]`)
     }
     result += entries.join(', ')
-    result += ' }'
+    result += '])'
     return result
   }
   if (value.constructor == Object) {
@@ -173,14 +179,17 @@ const inspect = function (value, depth = 1) {
     let result = '{ '
     const entries = []
     for (const key in value) {
-      entries.push(`${key}: ${inspectDeeper(value[key])}`)
+      entries.push(`${key}: ${reprDeep(value[key])}`)
     }
     result += entries.join(', ')
     result += ' }'
     return result
   }
   if (value instanceof Error) {
-    return `${value.name}: ${value.message}`
+    return `${value.name}('${value.message}')`
+  }
+  if (typeof value.constructor == 'function') {
+    return `${value.constructor.name} {}`
   }
   return `${value}`
 }
@@ -314,9 +323,13 @@ const isDeepEqual = function (left, right) {
  * ```
  */
 const assertEqual = function (expect, actual) {
-  if (!isDeepEqual(expect, actual)) {
-    log('expect', inspect(expect))
-    log('actual', inspect(actual))
+  if (expect instanceof Error) {
+    assertEqual(expect.name, actual.name)
+    assertEqual(expect.message, actual.message)
+  }
+  else if (!isDeepEqual(expect, actual)) {
+    log('expect', repr(expect))
+    log('actual', repr(actual))
     throw AssertionError('not equal')
   }
 }
@@ -329,17 +342,17 @@ const assertEqual = function (expect, actual) {
  * argsInspect(args Array) -> argsRepresentation string
  * ```
  */
-const argsInspect = args => `${args.map(curry1(inspect, __)).join(', ')}`
+const argsInspect = args => `${args.map(curry1(repr, __)).join(', ')}`
 
 /**
- * @name funcInspect
+ * @name funcRepr
  *
  * @synopsis
  * ```coffeescript [specscript]
- * funcInspect(args Array) -> funcRepresentation string
+ * funcRepr(args Array) -> funcRepresentation string
  * ```
  */
-const funcInspect = func => func.toString()
+const funcRepr = func => func.toString()
 
 /**
  * @name funcSignature
@@ -350,20 +363,20 @@ const funcInspect = func => func.toString()
  * ```
  */
 const funcSignature = (func, args) => func.name === ''
-  ? func.toString()
+  ? `(${argsInspect(args)}) |> ${func.toString()}`
   : `${func.name}(${argsInspect(args)})`
 
 /**
- * @name errorInspect
+ * @name errorRepr
  *
  * @synopsis
  * ```coffeescript [specscript]
  * Error = { name: string, message: string }
  *
- * errorInspect(error Error) -> funcRepresentation string
+ * errorRepr(error Error) -> funcRepresentation string
  * ```
  */
-const errorInspect = error => `${error.name}('${error.message}')`
+const errorRepr = error => `${error.name}('${error.message}')`
 
 /**
  * @name errorAssertEqual
@@ -589,7 +602,7 @@ const Test = function (...funcs) {
           operations.push([
             thunkify4(callPropBinary, func, 'apply', this, boundArgs),
             curry4(callPropBinary, expect, 'call', this, __),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} |> ${funcInspect(expect)}`)),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} |> ${funcRepr(expect)}`)),
           ].reduce(funcConcat))
         }
       } else {
@@ -597,7 +610,7 @@ const Test = function (...funcs) {
           operations.push([
             thunkify4(callPropBinary, func, 'apply', this, boundArgs),
             curry2(assertEqual, expect, __),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} -> ${inspect(expect)}`)),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} -> ${repr(expect)}`)),
           ].reduce(funcConcat))
         }
       }
@@ -619,10 +632,10 @@ const Test = function (...funcs) {
                     const execution = expect(error, ...boundArgs)
                     if (isPromise(execution)) {
                       return execution.then(funcConcat(
-                        tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expect)}`)),
+                        tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws; ${funcRepr(expect)}`)),
                         noop))
                     }
-                    log(` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expect)}`)
+                    log(` ✓ ${funcSignature(func, boundArgs)} throws; ${funcRepr(expect)}`)
                     return undefined
                   })
               }
@@ -631,10 +644,10 @@ const Test = function (...funcs) {
               const execution = expect(error, ...boundArgs)
               if (isPromise(execution)) {
                 return execution.then(funcConcat(
-                  tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expect)}`)),
+                  tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws; ${funcRepr(expect)}`)),
                   noop))
               }
-              log(` ✓ ${funcSignature(func, boundArgs)} throws; ${funcInspect(expect)}`)
+              log(` ✓ ${funcSignature(func, boundArgs)} throws; ${funcRepr(expect)}`)
               return undefined
             }
             throw AssertionError('did not throw')
@@ -648,7 +661,7 @@ const Test = function (...funcs) {
               assertThrows,
               thunkify4(callPropBinary, func, 'apply', this, boundArgs),
               expect),
-            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws ${errorInspect(expect)}`)),
+            tapSync(thunkify1(log, ` ✓ ${funcSignature(func, boundArgs)} throws ${errorRepr(expect)}`)),
           ))
         }
       }
