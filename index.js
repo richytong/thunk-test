@@ -189,7 +189,7 @@ const repr = function (value, depth = 1) {
     return `${value.name}('${value.message}')`
   }
   if (typeof value.constructor == 'function') {
-    return `${value.constructor.name} {}`
+    return `${value.constructor.name}()`
   }
   return `${value}`
 }

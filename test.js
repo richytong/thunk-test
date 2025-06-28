@@ -184,6 +184,7 @@ const tests = [
     .case({ a: 1, b: 2, c: 3 }, { a: 1, b: 2, c: 3 })
     .case(new Error('test'), new Error('test'))
     .case(new TypeError('test1'), new TypeError('test1'))
+    .case(stream.Readable.from([1, 2, 3]), () => {})
 ]
 
 
