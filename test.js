@@ -177,6 +177,7 @@ const tests = [
     .case(new Set([1, 2, 3]), new Set([1, 2, 3]))
     .case(new Set([{ a: 1 }, { b: 2 }, { c: 3 }]), new Set([{ a: 1 }, { b: 2 }, { c: 3 }]))
     .case(new Set(), new Set())
+    .case(new Map(), new Map())
     .case(new Map([['a', 1]]), new Map([['a', 1]]))
     .case(new Map([['a', 1], ['b', 2], ['c', 3]]), new Map([['a', 1], ['b', 2], ['c', 3]]))
     .case({}, {})

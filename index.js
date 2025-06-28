@@ -1,5 +1,5 @@
 /**
- * thunk-test v1.3.2
+ * thunk-test v1.3.3
  * https://github.com/richytong/thunk-test
  * (c) 2025 Richard Tong
  * thunk-test may be freely distributed under the MIT license.
@@ -161,7 +161,7 @@ const repr = function (value, depth = 1) {
   }
   if (value.constructor == Map) {
     if (value.size == 0) {
-      return 'm Map {}'
+      return 'Map()'
     }
     let result = 'Map(['
     const entries = []
