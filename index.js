@@ -1,3 +1,10 @@
+/**
+ * thunk-test v1.3.2
+ * https://github.com/richytong/thunk-test
+ * (c) 2025 Richard Tong
+ * thunk-test may be freely distributed under the MIT license.
+ */
+
 const noop = function () {}
 
 const always = value => function getter() { return value }
