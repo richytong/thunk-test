@@ -1,5 +1,5 @@
 /**
- * thunk-test v1.3.3
+ * thunk-test v1.3.4
  * https://github.com/richytong/thunk-test
  * (c) 2025 Richard Tong
  * thunk-test may be freely distributed under the MIT license.
@@ -189,7 +189,7 @@ const repr = function (value, depth = 1) {
     return `${value.name}('${value.message}')`
   }
   if (typeof value.constructor == 'function') {
-    return `${value.constructor.name} {}`
+    return `${value.constructor.name}()`
   }
   return `${value}`
 }
