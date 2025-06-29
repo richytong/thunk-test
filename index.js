@@ -128,6 +128,9 @@ const repr = function (value, depth = 1) {
   if (typeof value == 'number') {
     return `${value}`
   }
+  if (typeof value == 'boolean') {
+    return `${value}`
+  }
   if (Array.isArray(value)) {
     return `[${value.map(reprDeep).join(', ')}]`
   }

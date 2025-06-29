@@ -168,6 +168,8 @@ const tests = [
 
   Test('repr', function identity(value) { return value })
     .case(1, 1)
+    .case(false, false)
+    .case(true, true)
     .case('a', 'a')
     .case([], [])
     .case([1, 2, 3], [1, 2, 3])
