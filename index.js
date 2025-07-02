@@ -147,7 +147,7 @@ const repr = function (value, depth = 1) {
     return 'null'
   }
   if (value === undefined) {
-    return 'undefined'
+    return '()'
   }
   if (value.constructor == Set) {
     if (value.size == 0) {
