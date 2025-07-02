@@ -155,7 +155,7 @@ const curry4 = function (baseFunc, arg0, arg1, arg2, arg3) {
 const promiseAll = Promise.all.bind(Promise)
 
 const repr = function (value, depth = 1, args = false) {
-  const reprDeep = item => repr(item, depth + 1)
+  const reprDeep = item => repr(item, depth + 1, args)
   if (typeof value == 'number') {
     return `${value}`
   }
