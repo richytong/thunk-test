@@ -170,6 +170,8 @@ const tests = [
     .case(1, 1)
     .case(false, false)
     .case(true, true)
+    .case(undefined, undefined)
+    .case(null, null)
     .case('a', 'a')
     .case([], [])
     .case([1, 2, 3], [1, 2, 3])

@@ -80,6 +80,37 @@ const curry2 = function (baseFunc, arg0, arg1) {
     : curry2ResolveArg1(baseFunc, arg0)
 }
 
+// argument resolver for curry3
+const curry3ResolveArg0 = (
+  baseFunc, arg1, arg2,
+) => function arg0Resolver(arg0) {
+  return baseFunc(arg0, arg1, arg2)
+}
+
+// argument resolver for curry3
+const curry3ResolveArg1 = (
+  baseFunc, arg0, arg2,
+) => function arg1Resolver(arg1) {
+  return baseFunc(arg0, arg1, arg2)
+}
+
+// argument resolver for curry3
+const curry3ResolveArg2 = (
+  baseFunc, arg0, arg1,
+) => function arg2Resolver(arg2) {
+  return baseFunc(arg0, arg1, arg2)
+}
+
+const curry3 = function (baseFunc, arg0, arg1, arg2) {
+  if (arg0 == __) {
+    return curry3ResolveArg0(baseFunc, arg1, arg2)
+  }
+  if (arg1 == __) {
+    return curry3ResolveArg1(baseFunc, arg0, arg2)
+  }
+  return curry3ResolveArg2(baseFunc, arg0, arg1)
+}
+
 // argument resolver for curry4
 const curry4ResolveArg0 = (
   baseFunc, arg1, arg2, arg3,
@@ -123,7 +154,7 @@ const curry4 = function (baseFunc, arg0, arg1, arg2, arg3) {
 
 const promiseAll = Promise.all.bind(Promise)
 
-const repr = function (value, depth = 1) {
+const repr = function (value, depth = 1, args = false) {
   const reprDeep = item => repr(item, depth + 1)
   if (typeof value == 'number') {
     return `${value}`
@@ -147,7 +178,7 @@ const repr = function (value, depth = 1) {
     return 'null'
   }
   if (value === undefined) {
-    return '()'
+    return args ? 'undefined' : '()'
   }
   if (value.constructor == Set) {
     if (value.size == 0) {
@@ -338,14 +369,14 @@ const assertEqual = function (expect, actual) {
 }
 
 /**
- * @name argsInspect
+ * @name argsRepr
  *
  * @synopsis
  * ```coffeescript [specscript]
- * argsInspect(args Array) -> argsRepresentation string
+ * argsRepr(args Array) -> argsRepresentation string
  * ```
  */
-const argsInspect = args => `${args.map(curry1(repr, __)).join(', ')}`
+const argsRepr = args => `${args.map(curry3(repr, __, 1, true)).join(', ')}`
 
 /**
  * @name funcRepr
@@ -366,8 +397,8 @@ const funcRepr = func => func.toString()
  * ```
  */
 const funcSignature = (func, args) => func.name === ''
-  ? `(${argsInspect(args)}) |> ${func.toString()}`
-  : `${func.name}(${argsInspect(args)})`
+  ? `(${argsRepr(args)}) |> ${func.toString()}`
+  : `${func.name}(${argsRepr(args)})`
 
 /**
  * @name errorRepr
