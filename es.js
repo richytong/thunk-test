@@ -386,7 +386,7 @@ const argsRepr = args => `${args.map(curry3(repr, __, 1, true)).join(', ')}`
  * funcRepr(args Array) -> funcRepresentation string
  * ```
  */
-const funcRepr = func => func.toString()
+const funcRepr = func => func.name === '' ? func.toString() : func.name
 
 /**
  * @name funcSignature
