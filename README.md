@@ -1,6 +1,6 @@
 # ThunkTest
 
-![Node.js CI](https://github.com/richytong/thunk-test/workflows/Node.js%20CI/badge.svg?branch=master)
+![Node.js CI](https://github.com/richytong/thunk-test/workflows/Node.js%20CI/badge.svg)
 [![npm version](https://img.shields.io/npm/v/thunk-test.svg?style=flat)](https://www.npmjs.com/package/thunk-test)
 
 Modular testing for JavaScript. Declare tests as thunks, then execute them with a call.
