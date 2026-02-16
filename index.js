@@ -154,32 +154,41 @@ const curry4 = function (baseFunc, arg0, arg1, arg2, arg3) {
 
 const promiseAll = Promise.all.bind(Promise)
 
-const repr = function (value, depth = 1, args = false) {
-  const reprDeep = item => repr(item, depth + 1, args)
+const repr = function repr(value, depth = 1) {
+  const reprDeep = item => repr(item, depth + 1)
+
   if (typeof value == 'number') {
     return `${value}`
   }
+
   if (typeof value == 'boolean') {
     return `${value}`
   }
+
   if (Array.isArray(value)) {
     return `[${value.map(reprDeep).join(', ')}]`
   }
+
   if (ArrayBuffer.isView(value)) {
     return `${value.constructor.name}([${value.join(', ')}])`
   }
+
   if (typeof value == 'function') {
-    return value.toString()
+    return value.name || value.toString()
   }
+
   if (typeof value == 'string') {
     return depth == 0 ? value : `'${value}'`
   }
+
   if (value === null) {
     return 'null'
   }
+
   if (value === undefined) {
-    return args ? 'undefined' : '()'
+    return 'undefined'
   }
+
   if (value.constructor == Set) {
     if (value.size == 0) {
       return 'Set()'
@@ -193,6 +202,7 @@ const repr = function (value, depth = 1, args = false) {
     result += '])'
     return result
   }
+
   if (value.constructor == Map) {
     if (value.size == 0) {
       return 'Map()'
@@ -206,6 +216,7 @@ const repr = function (value, depth = 1, args = false) {
     result += '])'
     return result
   }
+
   if (value.constructor == Object) {
     if (Object.keys(value).length == 0) {
       return '{}'
@@ -219,12 +230,15 @@ const repr = function (value, depth = 1, args = false) {
     result += ' }'
     return result
   }
+
   if (value instanceof Error) {
     return `${value.name}('${value.message}')`
   }
+
   if (typeof value.constructor == 'function') {
     return `${value.constructor.name}()`
   }
+
   return `${value}`
 }
 
@@ -740,5 +754,15 @@ Test.all = function TestAll(tests) {
     return undefined
   }
 }
+
+/**
+ * @name Test.repr
+ *
+ * @docs
+ * ```coffeescript [specscript]
+ * Test.repr(value any) -> representation string
+ * ```
+ */
+Test.repr = repr
 
 module.exports = Test
