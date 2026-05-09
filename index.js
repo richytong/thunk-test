@@ -1,8 +1,8 @@
 /**
- * thunk-test v1.3.9
+ * Thunk Test
  * https://github.com/richytong/thunk-test
- * (c) 2025 Richard Tong
- * thunk-test may be freely distributed under the MIT license.
+ * (c) Richard Tong
+ * thunk-test may be freely distributed under the CFOSS license.
  */
 
 const noop = function () {}
@@ -236,7 +236,7 @@ const repr = function repr(value, depth = 1) {
     for (const error of value.errors) {
       errorReprs.push(`${error.name}('${error.message}')`)
     }
-    return `${value.name}(['${errorReprs.join(', ')}'])`
+    return `${value.name}([${errorReprs.join(', ')}])`
   }
 
   if (value instanceof Error) {
