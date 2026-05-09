@@ -1,5 +1,5 @@
 /**
- * Thunk Test
+ * ThunkTest
  * https://github.com/richytong/thunk-test
  * (c) Richard Tong
  * thunk-test may be freely distributed under the CFOSS license.
