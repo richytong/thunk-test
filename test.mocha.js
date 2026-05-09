@@ -236,7 +236,45 @@ describe('thunk-test', () => {
       assert.equal(Test.repr({ a: 1, b: 2, c: 3 }), '{ a: 1, b: 2, c: 3 }')
       assert.equal(Test.repr(new Error('test')), 'Error(\'test\')')
       assert.equal(Test.repr(new TypeError('test1')), 'TypeError(\'test1\')')
+      assert.equal(
+        Test.repr(new AggregateError([new Error('test'), new TypeError('test1')])),
+        'AggregateError([Error(\'test\'), TypeError(\'test1\')])'
+      )
       assert.equal(Test.repr(stream.Readable.from([1, 2, 3])), 'Readable()')
+    })
+
+    it('identity', async () => {
+      const identity = value => value
+      const test = Test('identity', identity)
+
+      test.case(1, 1)
+      test.case(false, false)
+      test.case(true, true)
+      test.case(undefined, undefined)
+      test.case(null, null)
+      test.case('a', 'a')
+      test.case([], [])
+      test.case([1, 2, 3], [1, 2, 3])
+      test.case(['a', 'b', 'c'], ['a', 'b', 'c'])
+      test.case(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]))
+      test.case(Buffer.from([1, 2, 3]), Buffer.from([1, 2, 3]))
+      test.case(new Set([1, 2, 3]), new Set([1, 2, 3]))
+      test.case(new Set([{ a: 1 }, { b: 2 }, { c: 3 }]), new Set([{ a: 1 }, { b: 2 }, { c: 3 }]))
+      test.case(new Set(), new Set())
+      test.case(new Map(), new Map())
+      test.case(new Map([['a', 1]]), new Map([['a', 1]]))
+      test.case(new Map([['a', 1], ['b', 2], ['c', 3]]), new Map([['a', 1], ['b', 2], ['c', 3]]))
+      test.case({}, {})
+      test.case({ a: 1, b: 2, c: 3 }, { a: 1, b: 2, c: 3 })
+      test.case(new Error('test'), new Error('test'))
+      test.case(new TypeError('test1'), new TypeError('test1'))
+      test.case(
+        new AggregateError([new Error('test'), new TypeError('test1')]),
+        new AggregateError([new Error('test'), new TypeError('test1')])
+      )
+      test.case(stream.Readable.from([1, 2, 3]), () => {})
+
+      test()
     })
   })
 })
