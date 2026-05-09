@@ -231,6 +231,14 @@ const repr = function repr(value, depth = 1) {
     return result
   }
 
+  if (value instanceof AggregateError) {
+    const errorReprs = []
+    for (const error of value.errors) {
+      errorReprs.push(`${error.name}('${error.message}')`)
+    }
+    return `${value.name}(['${errorReprs.join(', ')}'])`
+  }
+
   if (value instanceof Error) {
     return `${value.name}('${value.message}')`
   }
@@ -374,8 +382,14 @@ const assertEqual = function (expect, actual) {
   if (expect instanceof Error) {
     assertEqual(expect.name, actual.name)
     assertEqual(expect.message, actual.message)
-  }
-  else if (!isDeepEqual(expect, actual)) {
+
+    if (expect instanceof AggregateError) {
+      for (let i = 0; i < expect.errors.length; i++) {
+        assertEqual(expect.errors[i].name, actual.errors[i].name)
+        assertEqual(expect.errors[i].message, actual.errors[i].message)
+      }
+    }
+  } else if (!isDeepEqual(expect, actual)) {
     log('expect', repr(expect))
     log('actual', repr(actual))
     throw AssertionError('not equal')
