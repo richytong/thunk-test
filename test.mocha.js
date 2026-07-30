@@ -1,4 +1,4 @@
-const Test = require('thunk-test')
+const Test = require('.')
 const assert = require('assert')
 const stream = require('stream')
 const pipe = require('rubico/pipe')
