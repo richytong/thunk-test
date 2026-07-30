@@ -1,8 +1,5 @@
 /**
- * ThunkTest
- * https://github.com/richytong/thunk-test
- * (c) Richard Tong
- * thunk-test may be freely distributed under the CFOSS license.
+ * ThunkTest may be freely distributed under the CFOSS license.
  */
 
 const noop = function () {}
