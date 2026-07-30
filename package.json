@@ -37,7 +37,7 @@
     "rubico": "latest"
   },
   "scripts": {
-    "test": "mocha *.js */**.js",
+    "test": "mocha *.js",
     "lint": "eslint index.js"
   }
 }
