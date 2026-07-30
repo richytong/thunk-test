@@ -211,6 +211,8 @@ describe('thunk-test', () => {
     })
 
     it('repr', async () => {
+      const noop = () => {}
+
       assert.equal(Test.repr(1), '1')
       assert.equal(Test.repr(false), 'false')
       assert.equal(Test.repr(true), 'true')
@@ -224,6 +226,7 @@ describe('thunk-test', () => {
       assert.equal(Test.repr(Buffer.from([1, 2, 3])), 'Buffer([1, 2, 3])')
       function identity(value) { return value }
       assert.equal(Test.repr(identity), 'identity')
+      assert.equal(Test.repr(() => {}), '() => {}')
       assert.equal(Test.repr(() => { const a = 1; return a }), '() => { const a = 1; return a }')
       assert.equal(Test.repr(new Set([1, 2, 3])), 'Set([1, 2, 3])')
       assert.equal(Test.repr(new Set([{ a: 1 }, { b: 2 }, { c: 3 }])), 'Set([{ a: 1 }, { b: 2 }, { c: 3 }])')
